@@ -58,7 +58,7 @@ isError = False
 prevError = False
 errorMSG = ctk.CTkButton(root, textvariable=error,
                          text_color="black",fg_color='red',
-                         width=800,height=75, font=WarningFont,
+                         width=800,height=60, font=WarningFont,
                          corner_radius=10, border_width=4,
                          border_color="#000000", bg_color="transparent")
 errorMSG.place(x=112, y=10)
@@ -71,30 +71,29 @@ max_speed = 200 #max speed of the dial
 gradations = 20 #gradations every X KM/H
 velocity = 0 #0 to -180 speed value for the arc
 
-#speedometer canvas and placement
-speed = Canvas(root,width=800, height=325, bd=0,bg="#1B1464",highlightthickness=0)
-speed.place(x=224, y=115)
+#speedometer canvas and placement NOTE: canvas size/placement changes on different screen sizes for some reason?
+speed = Canvas(root,width=800, height=350, bd=0,bg="#1B1464",highlightthickness=0)
+speed.place(x=224, y=90)
 
 # repeatedly called function for drawing the speedometer
 def draw_speed(speed,max_speed,gradations,velocity):
-    speed.create_oval(75,25,725,650, fill="#242424",outline="")
-    speed.create_arc(100,50,700,650,extent = velocity,start = 180, fill="#FFD239",outline="")
-    speed.create_oval(125,75,675,650, fill="#1B1464",outline="")
-    circle_center = [400,325] #325 kinda fixes it
+    speed.create_oval(75,25,725,675, fill="#242424",outline="")#grey outline of speedometer (650x650)
+    speed.create_arc(100,50,700,650,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
+    speed.create_oval(125,75,675,625, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
+    circle_center = [400,350]
     #Loop to draw gradations
-    '''
     for i in range(int(max_speed/5)+1):
         angle = i*math.pi/((max_speed/5))
         xangle = math.cos(angle)
         yangle = -math.sin(angle)
-        if (i*5)%gradations == 0:
-            speed.create_line(circle_center[0]+325*xangle,circle_center[1]+325*yangle,
-                              circle_center[0]+305*xangle,circle_center[1]+305*yangle,fill="#FFD239",width=2)
-            #need to change to work with canvas grid
+        if (i*5)%gradations == 0:#major Dimension
+            speed.create_line(circle_center[0]+324*xangle,circle_center[1]+324*yangle,
+                              circle_center[0]+310*xangle,circle_center[1]+310*yangle,fill="#FFD239",width=4)
             
-        else:
-            tmp=None#minor dimension
-    '''
+        else:#minor dimension
+            speed.create_line(circle_center[0]+324*xangle,circle_center[1]+324*yangle,
+                              circle_center[0]+315*xangle,circle_center[1]+315*yangle,fill="#FFD239",width=2)
+            
 speed_val = ctk.StringVar(value="0 KM/H")
 dig_speed = ctk.CTkLabel(root,textvariable=speed_val, text_color="#FFD239",
                     fg_color="transparent", width=300,height=75,
@@ -114,14 +113,14 @@ while True:
     #test.configure(fg_color='lime')
 
     tmp=int(speed_val.get()[0:-5])
-    velocity = -(tmp/max_speed)*176
+    velocity = -(tmp/max_speed)*180 #convert speed to degrees
     speed.delete("all") #clear canvas before re-drawing to save memory/speed
     draw_speed(speed,max_speed,gradations,velocity)
     #testing
     if tmp == 200:
         tmp = 0
     else:
-        tmp+=1
+        tmp += 1
     #testing end
     speed_val.set(str(tmp)+" KM/H")
     time.sleep(0.01) #here to limit the update rate for testing
