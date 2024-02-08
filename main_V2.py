@@ -130,6 +130,8 @@ class Endurance:
 screen = Endurance()
 screen.telemetry_make()
 
+#to change screens, make screen = class of next screen and redraw the telemetry, also clear the screen to avoid lag
+
 #define parameters
 max_speed = 160 #max speed of the dial
 gradations = 20 #gradations every X KM/H
