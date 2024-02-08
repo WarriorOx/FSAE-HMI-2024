@@ -29,7 +29,7 @@ class Endurance:
         self.telLabels = ["Motor Temp","Bat Temp","Battery %","Power","Lap Time","Lap Power"]
         self.telNames = []
         #Grid coordinates of buttons((x),(y))
-        self.coords = [[5,832],[200,300,400]]
+        self.coords = [[5,844],[200,300,400]]
         #Text Variables
         bTvar = ctk.StringVar(value = "0°C")
         bCvar = ctk.StringVar(value = "0%")
@@ -91,8 +91,11 @@ class Endurance:
         self.brake.set(0)
 
         #speedometer canvas and placement Note: canvas size/placement changes on different screen sizes for some reason?
-        self.speed = Canvas(root,width=800, height=350, bd=0,bg="#1B1464",highlightthickness=0)
-        self.speed.place(x=224, y=150+self.yoffset)
+        self.speed_frame = Frame(root,width=650, height=350, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed_frame.place(x=313,y=160+self.yoffset)
+        self.speed = Canvas(self.speed_frame,width=650, height=350, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed.place(x=0,y=0)
+        #self.speed.place(x=224, y=150+self.yoffset)
         #Speed digital readout
         self.dig_speed = ctk.CTkLabel(root,textvariable=self.speed_val, text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
@@ -103,14 +106,14 @@ class Endurance:
         self.race = ctk.CTkLabel(root, text="ENDURANCE",
                                  text_color="#FFD239",fg_color="#1B1464",
                                  width=300,height=50, font=WarningFont)
-        self.race.place(x=362,y=545)
+        self.race.place(x=362,y=495+self.yoffset)
 
     # repeatedly called function for drawing the speedometer
     def draw_speed(self,speed,max_speed,gradations,velocity):
-        speed.create_oval(75,25,725,675, fill="#242424",outline="")#grey outline of speedometer (650x650)
-        speed.create_arc(100,50,700,650,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
-        speed.create_oval(125,75,675,625, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
-        circle_center = [400,350]
+        speed.create_oval(0,25,650,675, fill="#242424",outline="")#grey outline of speedometer (650x650)
+        speed.create_arc(25,50,625,650,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
+        speed.create_oval(50,75,600,625, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
+        circle_center = [325,350]
         #Loop to draw gradations
         for i in range(int(max_speed/5)+1):
             angle = i*math.pi/((max_speed/5))
