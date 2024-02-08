@@ -26,31 +26,32 @@ class Endurance:
 
     def __init__(self):
         #Telemetry text boxes
-        self.telLabels = ["Motor Temp","Lap Time","Battery %","Power Output","Battery Temp","Lap Power"]
+        self.telLabels = ["Motor Temp","Bat Temp","Battery %","Power","Lap Time","Lap Power"]
         self.telNames = []
         #Grid coordinates of buttons((x),(y))
-        self.coords = [[5,819],[200,300,400]]
+        self.coords = [[5,832],[200,300,400]]
         #Text Variables
         bTvar = ctk.StringVar(value = "0°C")
         bCvar = ctk.StringVar(value = "0%")
         mTvar = ctk.StringVar(value = "0°C")
         pOvar = ctk.StringVar(value = "0 kW")
         lPvar = ctk.StringVar(value = "0:00")
-        aPvar = ctk.StringVar(value = "0 kW AVG")
-        self.varNames = [mTvar,lPvar,bCvar,pOvar,bTvar,aPvar]
+        aPvar = ctk.StringVar(value = "0 kW/lap")
+        self.varNames = [mTvar,bTvar,bCvar,pOvar,lPvar,aPvar]
         self.speed_val = ctk.StringVar(value="0 KM/H")
+        self.yoffset = 50 #change the y value of the brake, accelerator and speedometer
 
     def telemetry_make(self):
         #loop to draw all the buttons and labels
         for i in range(len(self.telLabels)):
             newlabel = ctk.CTkLabel(root, text=f'{self.telLabels[i]}',
                             text_color="#FFD239",fg_color="#1B1464",
-                            width=200,height=50, font=LabelFont)
+                            width=175,height=50, font=LabelFont)
             newlabel.place(x=self.coords[0][math.floor(i/3)],y=self.coords[1][i%3])
 
             newbutton = ctk.CTkButton(root, textvariable=self.varNames[i],
                         text_color="#FFD239",fg_color="#1B1464",
-                        width=200,height=50, font=displayFont,
+                        width=175,height=50, font=displayFont,
                         corner_radius=10, border_width=4,
                         border_color="#000000", bg_color="transparent",)
             newbutton.place(x=self.coords[0][math.floor(i/3)],y=self.coords[1][i%3] + 50)
@@ -69,34 +70,40 @@ class Endurance:
         accel_label = ctk.CTkLabel(root, text="Accelerator Position",
                         text_color="#FFD239",fg_color="#1B1464",
                         width=400,height=21, font=LabelFont)
-        accel_label.place(x=312,y=72)
+        accel_label.place(x=312,y=57+self.yoffset)
 
         brake_label = ctk.CTkLabel(root, text="Brake Pressure",
                         text_color="#FFD239",fg_color="#1B1464",
                         width=400,height=21, font=LabelFont)
-        brake_label.place(x=312,y=422)
+        brake_label.place(x=312,y=422+self.yoffset)
 
         self.accel = ctk.CTkProgressBar(root, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.accel.place(x = 262, y = 100)
+        self.accel.place(x = 262, y = 85+self.yoffset)
         self.accel.set(0)
         self.brake = ctk.CTkProgressBar(root, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.brake.place(x = 262, y = 450)
+        self.brake.place(x = 262, y = 450+self.yoffset)
         self.brake.set(0)
 
         #speedometer canvas and placement Note: canvas size/placement changes on different screen sizes for some reason?
         self.speed = Canvas(root,width=800, height=350, bd=0,bg="#1B1464",highlightthickness=0)
-        self.speed.place(x=224, y=150)
+        self.speed.place(x=224, y=150+self.yoffset)
         #Speed digital readout
         self.dig_speed = ctk.CTkLabel(root,textvariable=self.speed_val, text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
-        self.dig_speed.place(x = (1024-300)/2,y = 250)
+        self.dig_speed.place(x = (1024-300)/2,y = 250+self.yoffset)
+
+        #Label for the screen
+        self.race = ctk.CTkLabel(root, text="ENDURANCE",
+                                 text_color="#FFD239",fg_color="#1B1464",
+                                 width=300,height=50, font=WarningFont)
+        self.race.place(x=362,y=545)
 
     # repeatedly called function for drawing the speedometer
     def draw_speed(self,speed,max_speed,gradations,velocity):
