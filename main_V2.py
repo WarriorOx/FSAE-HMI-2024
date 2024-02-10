@@ -17,6 +17,7 @@ root.geometry(f"{width}x{height}") #replace with line below when running on PI
 root.title("FSAE Dashboard")
 
 #Fonts
+diagnosticFont = ctk.CTkFont(family="Source Sans Pro Bold", size=14, weight="normal")
 LabelFont = ctk.CTkFont(family="Source Sans Pro Bold", size=24, weight="normal")
 displayFont = ctk.CTkFont(family="Source Sans Pro Bold", size=28, weight="normal")
 WarningFont = ctk.CTkFont(family="Source Sans Pro Bold", size=40, weight="normal")
@@ -232,15 +233,55 @@ class Handling:
                 speed.create_line(circle_center[0]+324*xangle,circle_center[1]+324*yangle,
                                 circle_center[0]+315*xangle,circle_center[1]+315*yangle,fill="#FFD239",width=2)
 
-#to change screens, make screen = class of next screen and redraw the telemetry, also clear the screen to avoid lag
+class Testing:
+
+    def __init__(self):
+        #diagnosics Labels
+        self.diaText = '''Diagnostics
+Motor Temp:\nBattery Temp:\nBattery Voltage:\nBattery Current:
+LV Battery Voltage:\nMotor RPM:\nBSPD Status:
+BPPS Status:\nTractive Status:\nFuses:\n
+'''
+
+    def telemetry_make(self):
+        self.Highlight = ctk.CTkTextbox(root,width = 500,height = 250,
+                                       border_width=2,border_color="#000000",
+                                       corner_radius=4,fg_color="#242424",
+                                       font=diagnosticFont,
+                                       text_color="#FFFFFF",wrap="word")
+        self.Highlight.grid(row=0,column=0,pady=25,padx=6)
+        self.Highlight.insert("0.0",text="Highlighted Data")
+
+        self.canBox = ctk.CTkTextbox(root,width = 500,height = 250,
+                                       border_width=2,border_color="#000000",
+                                       corner_radius=4,fg_color="#242424",
+                                       font=diagnosticFont,
+                                       text_color="#FFFFFF",wrap="word")
+        self.canBox.grid(row=1,column=0,pady=25,padx=6)
+        self.canBox.insert("0.0",text="CAN Messages")
+
+        self.diagnosticBox = ctk.CTkTextbox(root,width = 500,height = 550,
+                                       border_width=2,border_color="#000000",
+                                       corner_radius=4,fg_color="#242424",
+                                       font=diagnosticFont,
+                                       text_color="#FFFFFF",wrap="word")
+        self.diagnosticBox.grid(row=0,rowspan=2,column=1,pady=25,padx=6)
+        self.diagnosticBox.insert("0.0",text=self.diaText)
+
 
 #define parameters
 max_speed = 160 #max speed of the dial
 gradations = 20 #gradations every X KM/H
 velocity = 0 #0 to -180 speed value for the arc
 
-screenModes = [Endurance(),Handling()]
-currentMode = 0
+screenModes = [Endurance(),Handling(),Testing()] #list of screen classes
+currentMode = 0 #current screen
+tmp2 = 0
+diagnosticVal = ["99","45","540","150","12",
+                 "9000","Good","Good","Enabled","Good"]#list of diagnostic Values
+diagnosticLen = ["2.11","3.13","4.16","5.16",
+                 "6.19","7.10","8.12",
+                 "9.12","10.16","11.6"]#list of length of diagnostic labels
 #Update loop
 while True:
     #redraw the screen when mode is changed
@@ -258,35 +299,53 @@ while True:
     #code to change the color of the telemetry buttons
     #test = telNames[0]
     #test.configure(fg_color='lime')
+    if currentMode !=2:
+        tmp = screen.accel.get() + 0.005
+        if tmp >=1:
+            tmp=0
+        screen.accel.set(tmp)
 
-    tmp = screen.accel.get() + 0.005
-    if tmp >=1:
-        tmp=0
-    screen.accel.set(tmp)
+        tmp = screen.brake.get() + 0.005
+        if tmp >=1:
+            tmp=0
+        screen.brake.set(tmp)
 
-    tmp = screen.brake.get() + 0.005
-    if tmp >=1:
-        tmp=0
-    screen.brake.set(tmp)
-
-    tmp=int(screen.speed_val.get()[0:-5])
-    velocity = -(tmp/max_speed)*180 #convert speed to degrees
-    screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
-    screen.draw_speed(screen.speed,max_speed,gradations,velocity)
-    #testing
-    if tmp == 160:
-        tmp = 0
-        screen.speed_val.set(str(tmp)+" KM/H")#classes retain their values even after screen is changed
-        for widget in root.winfo_children():#clear screen
-            widget.destroy()
-        if currentMode == 0:#change screen mode
-            currentMode = 1
+        tmp=int(screen.speed_val.get()[0:-5])
+        velocity = -(tmp/max_speed)*180 #convert speed to degrees
+        screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
+        screen.draw_speed(screen.speed,max_speed,gradations,velocity)
+        #testing
+        if tmp == 160:
+            tmp = 0
+            screen.speed_val.set(str(tmp)+" KM/H")#classes retain their values even after screen is changed
+            for widget in root.winfo_children():#clear screen
+                widget.destroy()
+            if currentMode < 2:#change screen mode
+                currentMode +=1
+            else:
+                currentMode = 0
         else:
-            currentMode = 0
-    else:
-        tmp += 1
-    #testing end
-        screen.speed_val.set(str(tmp)+" KM/H")
+            tmp += 1
+        #testing end
+            screen.speed_val.set(str(tmp)+" KM/H")
+    elif currentMode == 2:
+        for val in range(len(diagnosticVal)):
+            try:
+                diagnosticVal[val] = str(int(diagnosticVal[val])-1)
+            except:
+                tmp=None
+            finally:
+                screen.diagnosticBox.delete(diagnosticLen[val],diagnosticLen[val].partition(".")[0]+".end")#delete previous value
+                screen.diagnosticBox.insert(diagnosticLen[val],text=diagnosticVal[val])#write next value
+
+        if tmp2 >= 160:
+            tmp2=0
+            currentMode=0
+            for widget in root.winfo_children():#clear screen
+                widget.destroy()
+        else:
+            tmp2 +=1
+
     time.sleep(0.01) #here to limit the update rate for testing
     
     root.update_idletasks()
