@@ -2,7 +2,7 @@ import customtkinter as ctk
 from tkinter import *
 import math
 import time
-import sqlite3
+#import sqlite3
 
 #parameters
 width = 1024
