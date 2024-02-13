@@ -16,6 +16,7 @@ root.geometry(f"{width}x{height}") #replace with line below when running on PI
 #root.wm_attributes('-fullscreen', True)
 root.resizable(False,False)
 root.title("FSAE Dashboard")
+root.grid_columnconfigure(2, weight=1)
 
 #Fonts
 diagnosticFont = ctk.CTkFont(family="Source Sans Pro Bold", size=14, weight="normal")
@@ -42,7 +43,7 @@ class Endurance:
 
     def telemetry_make(self):
         #loop to draw all the buttons and labels
-        rowData = [(2,1,1,1),(4,1,1,1),(6,1,1,1),(2,3,1,1),(4,3,1,1),(6,3,1,1)] #row,column,padx,pady
+        rowData = [(2,1,5,1),(4,1,5,1),(6,1,5,1),(2,3,5,1),(4,3,5,1),(6,3,5,1)] #row,column,padx,pady
         for i in range(len(self.telLabels)):
             newlabel = ctk.CTkLabel(root, text=f'{self.telLabels[i]}',
                             text_color="#FFD239",fg_color="#1B1464",
@@ -65,7 +66,7 @@ class Endurance:
                                 width=800,height=60, font=WarningFont,
                                 corner_radius=10, border_width=4,
                                 border_color="#000000", bg_color="transparent")
-        self.errorMSG.grid(row=1,column=1,columnspan=3,padx=5,pady=1)
+        self.errorMSG.grid(row=1,column=1,columnspan=3,padx=5,pady=3)
         #Draw the Accelerator position and the brake pressure
         accel_label = ctk.CTkLabel(root, text="Accelerator Position",
                         text_color="#FFD239",fg_color="#1B1464",
@@ -94,12 +95,12 @@ class Endurance:
         self.speed_frame = Frame(root,width=650, height=325, bd=0,bg="#1B1464",highlightthickness=0)
         self.speed_frame.grid(row=4,rowspan=4,column=2,padx=5,pady=5)
         self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=650, height=325)
-        self.speed.place(x=0,y=0)
+        self.speed.grid(row=1,column=1,rowspan=4,columnspan=3)
         #Speed digital readout is within the speedometer
         self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.speed_val, text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
-        self.dig_speed.place(x=175,y=200)
+        self.dig_speed.grid(row=4,column=2)
 
         #Label for the screen
         self.race = ctk.CTkLabel(root, text="ENDURANCE",
@@ -147,7 +148,7 @@ class Handling:
 
     def telemetry_make(self):
         #loop to draw all the buttons and labels
-        rowData = [(2,1,1,1),(4,1,1,1),(6,1,1,1),(2,3,1,1),(4,3,1,1),(6,3,1,1)] #row,column,padx,pady
+        rowData = [(2,1,5,1),(4,1,5,1),(6,1,5,1),(2,3,5,1),(4,3,5,1),(6,3,5,1)] #row,column,padx,pady
         for i in range(len(self.telLabels)):
             newlabel = ctk.CTkLabel(root, text=f'{self.telLabels[i]}',
                             text_color="#FFD239",fg_color="#1B1464",
@@ -170,7 +171,7 @@ class Handling:
                                 width=800,height=60, font=WarningFont,
                                 corner_radius=10, border_width=4,
                                 border_color="#000000", bg_color="transparent")
-        self.errorMSG.grid(row=1,column=1,columnspan=3,padx=5,pady=1)
+        self.errorMSG.grid(row=1,column=1,columnspan=3,padx=5,pady=3)
         #Draw the Accelerator position and the brake pressure
         accel_label = ctk.CTkLabel(root, text="Accelerator Position",
                         text_color="#FFD239",fg_color="#1B1464",
@@ -199,12 +200,12 @@ class Handling:
         self.speed_frame = Frame(root,width=650, height=325, bd=0,bg="#1B1464",highlightthickness=0)
         self.speed_frame.grid(row=4,rowspan=4,column=2,padx=5,pady=5)
         self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=650, height=325)
-        self.speed.place(x=0,y=0)
+        self.speed.grid(row=1,column=1,rowspan=4,columnspan=3)
         #Speed digital readout is within the speedometer
         self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.speed_val, text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
-        self.dig_speed.place(x=175,y=200)
+        self.dig_speed.grid(row=4,column=2)
 
         #Label for the screen
         self.race = ctk.CTkLabel(root, text="HANDLING",
