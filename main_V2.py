@@ -14,6 +14,7 @@ root = ctk.CTk()
 root.configure(fg_color="#1B1464")
 root.geometry(f"{width}x{height}") #replace with line below when running on PI
 #root.wm_attributes('-fullscreen', True)
+root.resizable(False,False)
 root.title("FSAE Dashboard")
 
 #Fonts
@@ -29,8 +30,6 @@ class Endurance:
         #Telemetry text boxes
         self.telLabels = ["Motor Temp","Bat Temp","Battery %","Power","Lap Time","Lap Power"]
         self.telNames = []
-        #Grid coordinates of buttons((x),(y))
-        self.coords = [[5,844],[200,300,400]]
         #Text Variables
         bTvar = ctk.StringVar(value = "0°C")
         bCvar = ctk.StringVar(value = "0%")
@@ -40,22 +39,22 @@ class Endurance:
         aPvar = ctk.StringVar(value = "0 kW/lap")
         self.varNames = [mTvar,bTvar,bCvar,pOvar,lPvar,aPvar]
         self.speed_val = ctk.StringVar(value="0 KM/H")
-        self.yoffset = 50 #change the y value of the brake, accelerator and speedometer
 
     def telemetry_make(self):
         #loop to draw all the buttons and labels
+        rowData = [(2,1,1,1),(4,1,1,1),(6,1,1,1),(2,3,1,1),(4,3,1,1),(6,3,1,1)] #row,column,padx,pady
         for i in range(len(self.telLabels)):
             newlabel = ctk.CTkLabel(root, text=f'{self.telLabels[i]}',
                             text_color="#FFD239",fg_color="#1B1464",
                             width=175,height=50, font=LabelFont)
-            newlabel.place(x=self.coords[0][math.floor(i/3)],y=self.coords[1][i%3])
+            newlabel.grid(row=rowData[i][0],column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
 
             newbutton = ctk.CTkButton(root, textvariable=self.varNames[i],
                         text_color="#FFD239",fg_color="#1B1464",
                         width=175,height=50, font=displayFont,
                         corner_radius=10, border_width=4,
                         border_color="#000000", bg_color="transparent",)
-            newbutton.place(x=self.coords[0][math.floor(i/3)],y=self.coords[1][i%3] + 50)
+            newbutton.grid(row=rowData[i][0]+1,column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
             self.telNames.append(newbutton)
         #draw the error message button
         error = ctk.StringVar(value = "Initial Value")
@@ -66,55 +65,54 @@ class Endurance:
                                 width=800,height=60, font=WarningFont,
                                 corner_radius=10, border_width=4,
                                 border_color="#000000", bg_color="transparent")
-        self.errorMSG.place(x=112, y=10)
+        self.errorMSG.grid(row=1,column=1,columnspan=3,padx=5,pady=1)
         #Draw the Accelerator position and the brake pressure
         accel_label = ctk.CTkLabel(root, text="Accelerator Position",
                         text_color="#FFD239",fg_color="#1B1464",
                         width=400,height=21, font=LabelFont)
-        accel_label.place(x=312,y=57+self.yoffset)
+        accel_label.grid(row=2,column=2,padx=5,pady=1)
 
         brake_label = ctk.CTkLabel(root, text="Brake Pressure",
                         text_color="#FFD239",fg_color="#1B1464",
                         width=400,height=21, font=LabelFont)
-        brake_label.place(x=312,y=422+self.yoffset)
+        brake_label.grid(row=8,column=2,padx=5,pady=1)
 
         self.accel = ctk.CTkProgressBar(root, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.accel.place(x = 262, y = 85+self.yoffset)
+        self.accel.grid(row=3,column=2,padx=5,pady=1)
         self.accel.set(0)
         self.brake = ctk.CTkProgressBar(root, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.brake.place(x = 262, y = 450+self.yoffset)
+        self.brake.grid(row=9,column=2,padx=5,pady=1)
         self.brake.set(0)
 
         #speedometer canvas and placement Note: canvas size/placement changes on different screen sizes for some reason?
-        self.speed_frame = Frame(root,width=650, height=350, bd=0,bg="#1B1464",highlightthickness=0)
-        self.speed_frame.place(x=313,y=160+self.yoffset)
-        self.speed = Canvas(self.speed_frame,width=650, height=350, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed_frame = Frame(root,width=650, height=325, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed_frame.grid(row=4,rowspan=4,column=2,padx=5,pady=5)
+        self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=650, height=325)
         self.speed.place(x=0,y=0)
-        #self.speed.place(x=224, y=150+self.yoffset)
-        #Speed digital readout
-        self.dig_speed = ctk.CTkLabel(root,textvariable=self.speed_val, text_color="#FFD239",
+        #Speed digital readout is within the speedometer
+        self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.speed_val, text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
-        self.dig_speed.place(x = (1024-300)/2,y = 250+self.yoffset)
+        self.dig_speed.place(x=175,y=200)
 
         #Label for the screen
         self.race = ctk.CTkLabel(root, text="ENDURANCE",
                                  text_color="#FFD239",fg_color="#1B1464",
                                  width=300,height=50, font=WarningFont)
-        self.race.place(x=362,y=495+self.yoffset)
+        self.race.grid(row=10,column=2,padx=5,pady=5)
 
     # repeatedly called function for drawing the speedometer
     def draw_speed(self,speed,max_speed,gradations,velocity):
-        speed.create_oval(0,25,650,675, fill="#242424",outline="")#grey outline of speedometer (650x650)
-        speed.create_arc(25,50,625,650,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
-        speed.create_oval(50,75,600,625, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
-        circle_center = [325,350]
+        speed.create_oval(0,0,650,650, fill="#242424",outline="")#grey outline of speedometer (650x650)
+        speed.create_arc(25,25,625,625,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
+        speed.create_oval(50,50,600,600, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
+        circle_center = [325,325]
         #Loop to draw gradations
         for i in range(int(max_speed/5)+1):
             angle = i*math.pi/((max_speed/5))
@@ -149,18 +147,19 @@ class Handling:
 
     def telemetry_make(self):
         #loop to draw all the buttons and labels
+        rowData = [(2,1,1,1),(4,1,1,1),(6,1,1,1),(2,3,1,1),(4,3,1,1),(6,3,1,1)] #row,column,padx,pady
         for i in range(len(self.telLabels)):
             newlabel = ctk.CTkLabel(root, text=f'{self.telLabels[i]}',
                             text_color="#FFD239",fg_color="#1B1464",
                             width=175,height=50, font=LabelFont)
-            newlabel.place(x=self.coords[0][math.floor(i/3)],y=self.coords[1][i%3])
+            newlabel.grid(row=rowData[i][0],column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
 
             newbutton = ctk.CTkButton(root, textvariable=self.varNames[i],
                         text_color="#FFD239",fg_color="#1B1464",
                         width=175,height=50, font=displayFont,
                         corner_radius=10, border_width=4,
                         border_color="#000000", bg_color="transparent",)
-            newbutton.place(x=self.coords[0][math.floor(i/3)],y=self.coords[1][i%3] + 50)
+            newbutton.grid(row=rowData[i][0]+1,column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
             self.telNames.append(newbutton)
         #draw the error message button
         error = ctk.StringVar(value = "Initial Value")
@@ -171,55 +170,54 @@ class Handling:
                                 width=800,height=60, font=WarningFont,
                                 corner_radius=10, border_width=4,
                                 border_color="#000000", bg_color="transparent")
-        self.errorMSG.place(x=112, y=10)
+        self.errorMSG.grid(row=1,column=1,columnspan=3,padx=5,pady=1)
         #Draw the Accelerator position and the brake pressure
         accel_label = ctk.CTkLabel(root, text="Accelerator Position",
                         text_color="#FFD239",fg_color="#1B1464",
                         width=400,height=21, font=LabelFont)
-        accel_label.place(x=312,y=57+self.yoffset)
+        accel_label.grid(row=2,column=2,padx=5,pady=1)
 
         brake_label = ctk.CTkLabel(root, text="Brake Pressure",
                         text_color="#FFD239",fg_color="#1B1464",
                         width=400,height=21, font=LabelFont)
-        brake_label.place(x=312,y=422+self.yoffset)
+        brake_label.grid(row=8,column=2,padx=5,pady=1)
 
         self.accel = ctk.CTkProgressBar(root, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.accel.place(x = 262, y = 85+self.yoffset)
+        self.accel.grid(row=3,column=2,padx=5,pady=1)
         self.accel.set(0)
         self.brake = ctk.CTkProgressBar(root, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.brake.place(x = 262, y = 450+self.yoffset)
+        self.brake.grid(row=9,column=2,padx=5,pady=1)
         self.brake.set(0)
 
         #speedometer canvas and placement Note: canvas size/placement changes on different screen sizes for some reason?
-        self.speed_frame = Frame(root,width=650, height=350, bd=0,bg="#1B1464",highlightthickness=0)
-        self.speed_frame.place(x=313,y=160+self.yoffset)
-        self.speed = Canvas(self.speed_frame,width=650, height=350, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed_frame = Frame(root,width=650, height=325, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed_frame.grid(row=4,rowspan=4,column=2,padx=5,pady=5)
+        self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=650, height=325)
         self.speed.place(x=0,y=0)
-        #self.speed.place(x=224, y=150+self.yoffset)
-        #Speed digital readout
-        self.dig_speed = ctk.CTkLabel(root,textvariable=self.speed_val, text_color="#FFD239",
+        #Speed digital readout is within the speedometer
+        self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.speed_val, text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
-        self.dig_speed.place(x = (1024-300)/2,y = 250+self.yoffset)
+        self.dig_speed.place(x=175,y=200)
 
         #Label for the screen
         self.race = ctk.CTkLabel(root, text="HANDLING",
                                  text_color="#FFD239",fg_color="#1B1464",
                                  width=300,height=50, font=WarningFont)
-        self.race.place(x=362,y=495+self.yoffset)
+        self.race.grid(row=10,column=2,padx=5,pady=5)
 
     # repeatedly called function for drawing the speedometer
     def draw_speed(self,speed,max_speed,gradations,velocity):
-        speed.create_oval(0,25,650,675, fill="#242424",outline="")#grey outline of speedometer (650x650)
-        speed.create_arc(25,50,625,650,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
-        speed.create_oval(50,75,600,625, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
-        circle_center = [325,350]
+        speed.create_oval(0,0,650,650, fill="#242424",outline="")#grey outline of speedometer (650x650)
+        speed.create_arc(25,25,625,625,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
+        speed.create_oval(50,50,600,600, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
+        circle_center = [325,325]
         #Loop to draw gradations
         for i in range(int(max_speed/5)+1):
             angle = i*math.pi/((max_speed/5))
