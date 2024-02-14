@@ -28,6 +28,7 @@ speedFont = ctk.CTkFont(family="Source Sans Pro Bold", size = 60, weight="normal
 # make speedometer smaller, make temperature and power/lap time larger
 # Add brake bias meter to both screens
 # Add code to change the color of the gauges when they are above a certain number and give a error
+# make the side gauge clusters a frame and the label+gauges a frame to fix the spacing issues
 class Endurance:
 
     def __init__(self):
