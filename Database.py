@@ -11,5 +11,7 @@ cursor.execute("INSERT INTO fsae_database VALUES ('02/10/2024','8:37', 'Bat Temp
 cursor.execute("INSERT INTO fsae_database VALUES ('02/10/2024','8:37', 'Battery %', 1)")
 cursor.execute("INSERT INTO fsae_database VALUES ('02/10/2024','8:37', 'Power', 120)")
 cursor.execute("INSERT INTO fsae_database VALUES ('02/10/2024','8:37', 'Lap Time', 10)")
-cursor.execute("INSERT INTO fsae_database VALUES ('02/10/2024','8:37', 'Lap Power', 150)")
+cursor.execute("INSERT INTO fsae_database VALUES ('02/10/2024','8:37', 'Lap Power', 150)") #Hi
+
+
 
