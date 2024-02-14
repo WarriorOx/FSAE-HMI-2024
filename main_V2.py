@@ -25,6 +25,9 @@ displayFont = ctk.CTkFont(family="Source Sans Pro Bold", size=28, weight="normal
 WarningFont = ctk.CTkFont(family="Source Sans Pro Bold", size=40, weight="normal")
 speedFont = ctk.CTkFont(family="Source Sans Pro Bold", size = 60, weight="normal")
 #for endurance race
+# make speedometer smaller, make temperature and power/lap time larger
+# Add brake bias meter to both screens
+# Add code to change the color of the gauges when they are above a certain number and give a error
 class Endurance:
 
     def __init__(self):
