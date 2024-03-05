@@ -22,3 +22,14 @@ The screen is connected to a Raspberry Pi (henceforth Rpi) by HDMI that is under
 The database is a SQLite database running on the Rpi and is stored on the Rpi's SD card. It logs the data at a set frequency and stores it in the database along with a timestamp.
 #### Unmade-file.py
 This file converts the data from the database to different graphs and an excel or csv file(undecided) and saves the files to the SD Card. A USB stick can be plugged into the Rpi to copy the data over.
+
+## Libraries
+| Library | Usage |
+|---------|-------|
+|Tkinter and customTkinter | Screen & UI |
+|sqlite3 | Database Interfacing |
+|adafruit-circuitpython-lsm6ds | Accelerometer and Gyroscope |
+|adafruit-circuitpython-gps | GPS Module |
+|adafruit-circuitpython-mmc56x3 | Magnetometer |
+
+See library documentation for information on how to use
