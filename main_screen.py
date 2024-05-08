@@ -10,6 +10,10 @@ import sqlite3
 # Impliment CAN data requesting/recieving
 # Impliment button controls/leds using interupts
 
+#Nice to have
+# Send data from VCU at a set frequency (ie. every 100ms) which some data is averaged over (ie. temperature)
+# ^ Send data from VCU and recieve with interupts to save clock cycles
+
 #################################################################################################
 
 #CAN Communication Section (functions/setup only)
