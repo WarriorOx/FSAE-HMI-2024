@@ -1,5 +1,5 @@
 import sqlite3
-import rando
+import random
 import time
 
 connection = sqlite3.connect("fsae.db")

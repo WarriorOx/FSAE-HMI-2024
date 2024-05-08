@@ -12,11 +12,54 @@ import sqlite3
 
 #################################################################################################
 
-#CAN Communication Section (functions only)
+#CAN Communication Section (functions/setup only)
+
+sensor_data = []
 
 #################################################################################################
 
-#Data logging Code Section (functions only)
+#Data logging Code Section (functions/setup only)
+
+#this query needs to be updated to reflect new table requirements
+tableSQL = '''
+    CREATE TABLE IF NOT EXISTS telemetry_data (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        Speed REAL,
+        MotorTemperature REAL,
+        CoolantTemperature REAL,
+        CoolantFlowRate REAL,
+        MotorCurrent REAL,
+        BatteryVoltage REAL,
+        BatteryTemperature REAL,
+        LVBatteryVoltage REAL,
+        GPSLocation TEXT,
+        Acceleration3Axis TEXT,
+        Direction3Axis TEXT,
+        LapTime REAL
+    );
+'''
+#check connection to DB, useful to run when there is an error
+def connectDB(conn):
+    try:
+        conn.cursor()
+    except:
+        conn = sqlite3.connect("fsae.db")
+        return(conn)
+
+#create data table if not exists, useful to run when there is an error
+def createTable(conn, tableSQL):
+    tmp = conn.cursor()
+    tmp.execute(tableSQL)
+    conn.commit()
+
+#function to be run each loop to log data to DB input DB connection and sensor_data list
+def logData(conn, sensor_data):
+    tmp = conn.cursor()
+    #this SQL needs to be updated to reflect variable change and DB structure change
+    tmp.execute('''INSERT INTO telemetry_data 
+                    (GPSLocation, Acceleration3Axis, Direction3Axis) 
+                    VALUES (?, ?, ?)''', sensor_data)
+    conn.commit()
 
 #################################################################################################
 
