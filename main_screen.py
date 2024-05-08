@@ -22,7 +22,7 @@ sensor_data = []
 
 #################################################################################################
 
-#Data logging Code Section (functions/setup only)
+#Data logging Code Section
 class DataLogging():
 
     #this query needs to be updated to reflect new table requirements
@@ -72,6 +72,7 @@ class DataLogging():
                     (GPSLocation, Acceleration3Axis, Direction3Axis) 
                     VALUES (?, ?, ?)''', sensor_data)
         conn.commit()
+
 #################################################################################################
 
 #Screen Code
