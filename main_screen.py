@@ -2,12 +2,15 @@ import customtkinter as ctk
 from tkinter import *
 import math
 import time
-#import sqlite3
+import sqlite3
 
 #parameters
 width = 1024
 height = 600
 center = [width/2,height/2]
+max_speed = 160 #max speed of the dial
+gradations = 20 #gradations every X KM/H
+velocity = 0 #0 to -180 speed value for the arc
 
 #startup
 root = ctk.CTk()
@@ -16,7 +19,7 @@ root.geometry(f"{width}x{height}") #replace with line below when running on PI
 #root.wm_attributes('-fullscreen', True)
 root.resizable(False,False)
 root.title("FSAE Dashboard")
-root.grid_columnconfigure(2, weight=1)
+root.grid_columnconfigure((1,2,3), weight=1)
 
 #Fonts
 diagnosticFont = ctk.CTkFont(family="Source Sans Pro Bold", size=14, weight="normal")
@@ -42,19 +45,29 @@ class Endurance:
         pOvar = ctk.StringVar(value = "0 kW")
         lPvar = ctk.StringVar(value = "0:00")
         aPvar = ctk.StringVar(value = "0 kW/lap")
-        self.varNames = [mTvar,bTvar,bCvar,pOvar,lPvar,aPvar]
-        self.speed_val = ctk.StringVar(value="0 KM/H")
+        speed_val = ctk.StringVar(value="0 KM/H")
+        self.varNames = [mTvar,bTvar,bCvar,pOvar,lPvar,aPvar,speed_val]
 
     def telemetry_make(self):
         #loop to draw all the buttons and labels
+        #Frame for left side data
+        self.telLeft = ctk.CTkFrame(master=root,width=175,height=335,border_width=0,
+                                    fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
+        self.telLeft.grid(row=2,column=1,padx=5,pady=5)
+        
+        #Frame for right side data
+        self.telRight = ctk.CTkFrame(master=root,width=175,height=335,border_width=0,
+                                    fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
+        self.telRight.grid(row=2,column=3,padx=5,pady=5)
         rowData = [(2,1,5,1),(4,1,5,1),(6,1,5,1),(2,3,5,1),(4,3,5,1),(6,3,5,1)] #row,column,padx,pady
+        framedata = [self.telLeft, self.telRight] #Left and Right side data frames
         for i in range(len(self.telLabels)):
-            newlabel = ctk.CTkLabel(root, text=f'{self.telLabels[i]}',
+            newlabel = ctk.CTkLabel(framedata[math.floor(i/3)], text=f'{self.telLabels[i]}',
                             text_color="#FFD239",fg_color="#1B1464",
                             width=175,height=50, font=LabelFont)
             newlabel.grid(row=rowData[i][0],column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
 
-            newbutton = ctk.CTkButton(root, textvariable=self.varNames[i],
+            newbutton = ctk.CTkButton(framedata[math.floor(i/3)], textvariable=self.varNames[i],
                         text_color="#FFD239",fg_color="#1B1464",
                         width=175,height=50, font=displayFont,
                         corner_radius=10, border_width=4,
@@ -71,65 +84,70 @@ class Endurance:
                                 corner_radius=10, border_width=4,
                                 border_color="#000000", bg_color="transparent")
         self.errorMSG.grid(row=1,column=1,columnspan=3,padx=5,pady=3)
+        #Frame for middle elements
+        self.telMid = ctk.CTkFrame(master=root,width=600,border_width=0,
+                                    fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
+        self.telMid.grid(row=2,column=2,padx=5,pady=5, rowspan=2)
         #Draw the Accelerator position and the brake pressure
-        accel_label = ctk.CTkLabel(root, text="Accelerator Position",
+        accel_label = ctk.CTkLabel(self.telMid, text="Accelerator Position",
                         text_color="#FFD239",fg_color="#1B1464",
                         width=400,height=21, font=LabelFont)
-        accel_label.grid(row=2,column=2,padx=5,pady=1)
-
-        brake_label = ctk.CTkLabel(root, text="Brake Pressure",
-                        text_color="#FFD239",fg_color="#1B1464",
-                        width=400,height=21, font=LabelFont)
-        brake_label.grid(row=8,column=2,padx=5,pady=1)
-
-        self.accel = ctk.CTkProgressBar(root, height=25, width=500,
+        accel_label.grid(row=1,column=1,padx=5,pady=1)
+        self.accel = ctk.CTkProgressBar(self.telMid, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.accel.grid(row=3,column=2,padx=5,pady=1)
+        self.accel.grid(row=2,column=1,padx=5,pady=1)
         self.accel.set(0)
-        self.brake = ctk.CTkProgressBar(root, height=25, width=500,
+
+        brake_label = ctk.CTkLabel(self.telMid, text="Brake Pressure",
+                        text_color="#FFD239",fg_color="#1B1464",
+                        width=400,height=21, font=LabelFont)
+        brake_label.grid(row=4,column=1,padx=5,pady=1)
+
+        self.brake = ctk.CTkProgressBar(self.telMid, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.brake.grid(row=9,column=2,padx=5,pady=1)
+        self.brake.grid(row=5,column=1,padx=5,pady=1)
         self.brake.set(0)
 
         #speedometer canvas and placement Note: canvas size/placement changes on different screen sizes for some reason?
-        self.speed_frame = Frame(root,width=650, height=325, bd=0,bg="#1B1464",highlightthickness=0)
-        self.speed_frame.grid(row=4,rowspan=4,column=2,padx=5,pady=5)
-        self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=650, height=325)
-        self.speed.grid(row=1,column=1,rowspan=4,columnspan=3)
+        self.speed_frame = Frame(self.telMid,width=600, height=300, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed_frame.grid(row=3,column=1,padx=5,pady=5)
+        self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=600, height=300)
+        self.speed.pack(side=TOP)
         #Speed digital readout is within the speedometer
-        self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.speed_val, text_color="#FFD239",
+        self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.varNames[6], text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
-        self.dig_speed.grid(row=4,column=2)
+        self.dig_speed.pack(side=BOTTOM)
 
-        #Label for the screen
+        #Label that this is the endurance screen
         self.race = ctk.CTkLabel(root, text="ENDURANCE",
                                  text_color="#FFD239",fg_color="#1B1464",
-                                 width=300,height=50, font=WarningFont)
-        self.race.grid(row=10,column=2,padx=5,pady=5)
+                                 width=175,height=50, font=LabelFont)
+        self.race.grid(row=3,column=1,padx=5,pady=3)
 
     # repeatedly called function for drawing the speedometer
     def draw_speed(self,speed,max_speed,gradations,velocity):
-        speed.create_oval(0,0,650,650, fill="#242424",outline="")#grey outline of speedometer (650x650)
-        speed.create_arc(25,25,625,625,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
-        speed.create_oval(50,50,600,600, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
-        circle_center = [325,325]
+        speed.create_oval(0,0,600,600, fill="#242424",outline="")#grey outline of speedometer (600x600)
+        speed.create_arc(25,25,575,575,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (575x575)
+        speed.create_oval(50,50,550,550, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (550x550)
+        circle_center = [300,300]
         #Loop to draw gradations
         for i in range(int(max_speed/5)+1):
             angle = i*math.pi/((max_speed/5))
             xangle = math.cos(angle)
             yangle = -math.sin(angle)
             if (i*5)%gradations == 0:#major Dimension
-                speed.create_line(circle_center[0]+324*xangle,circle_center[1]+324*yangle,
-                                circle_center[0]+310*xangle,circle_center[1]+310*yangle,fill="#FFD239",width=4)
+                speed.create_line(circle_center[0]+299*xangle,circle_center[1]+299*yangle,
+                                circle_center[0]+285*xangle,circle_center[1]+285*yangle,fill="#FFD239",width=4)
                 
             else:#minor dimension
-                speed.create_line(circle_center[0]+324*xangle,circle_center[1]+324*yangle,
-                                circle_center[0]+315*xangle,circle_center[1]+315*yangle,fill="#FFD239",width=2)
+                speed.create_line(circle_center[0]+299*xangle,circle_center[1]+299*yangle,
+                                circle_center[0]+290*xangle,circle_center[1]+290*yangle,fill="#FFD239",width=2)
+
 #for Acceleration, Skidpad and Autocross
 class Handling:
 
@@ -146,8 +164,8 @@ class Handling:
         pOvar = ctk.StringVar(value = "0 kW")
         aCvar = ctk.StringVar(value = "0 m/s²")
         aPvar = ctk.StringVar(value = "0 m/s²")#zero between runs with the gps home button
-        self.varNames = [mTvar,bTvar,bCvar,pOvar,aCvar,aPvar]
-        self.speed_val = ctk.StringVar(value="0 KM/H")
+        speed_val = ctk.StringVar(value="0 KM/H")
+        self.varNames = [mTvar,bTvar,bCvar,pOvar,aCvar,aPvar,speed_val]
         self.yoffset = 50 #change the y value of the brake, accelerator and speedometer
 
     def telemetry_make(self):
@@ -206,7 +224,7 @@ class Handling:
         self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=650, height=325)
         self.speed.grid(row=1,column=1,rowspan=4,columnspan=3)
         #Speed digital readout is within the speedometer
-        self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.speed_val, text_color="#FFD239",
+        self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.varNames[6], text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
         self.dig_speed.grid(row=4,column=2)
@@ -271,12 +289,6 @@ BPPS Status:\nTractive Status:\nFuses:\n
         self.diagnosticBox.grid(row=0,rowspan=2,column=1,pady=25,padx=6)
         self.diagnosticBox.insert("0.0",text=self.diaText)
 
-
-#define parameters
-max_speed = 160 #max speed of the dial
-gradations = 20 #gradations every X KM/H
-velocity = 0 #0 to -180 speed value for the arc
-
 screenModes = [Endurance(),Handling(),Testing()] #list of screen classes
 currentMode = 0 #current screen
 tmp2 = 0
@@ -302,6 +314,7 @@ while True:
     #code to change the color of the telemetry buttons
     #test = telNames[0]
     #test.configure(fg_color='lime')
+    
     if currentMode !=2:
         tmp = screen.accel.get() + 0.005
         if tmp >=1:
@@ -312,15 +325,15 @@ while True:
         if tmp >=1:
             tmp=0
         screen.brake.set(tmp)
-
-        tmp=int(screen.speed_val.get()[0:-5])
+        
+        tmp=int(screen.varNames[6].get()[0:-5])
         velocity = -(tmp/max_speed)*180 #convert speed to degrees
         screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
         screen.draw_speed(screen.speed,max_speed,gradations,velocity)
         #testing
         if tmp == 160:
             tmp = 0
-            screen.speed_val.set(str(tmp)+" KM/H")#classes retain their values even after screen is changed
+            screen.varNames[6].set(str(tmp)+" KM/H")#classes retain their values even after screen is changed
             for widget in root.winfo_children():#clear screen
                 widget.destroy()
             if currentMode < 2:#change screen mode
@@ -330,7 +343,7 @@ while True:
         else:
             tmp += 1
         #testing end
-            screen.speed_val.set(str(tmp)+" KM/H")
+        screen.varNames[6].set(str(tmp)+" KM/H")
     elif currentMode == 2:
         for val in range(len(diagnosticVal)):
             try:
