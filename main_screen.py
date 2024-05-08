@@ -21,6 +21,7 @@ import sqlite3
 #################################################################################################
 
 #Screen Code
+
 #parameters
 width = 1024
 height = 600
@@ -184,14 +185,24 @@ class Handling:
 
     def telemetry_make(self):
         #loop to draw all the buttons and labels
+        #Frame for left side data
+        self.telLeft = ctk.CTkFrame(master=root,width=175,height=335,border_width=0,
+                                    fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
+        self.telLeft.grid(row=2,column=1,padx=5,pady=5)
+        
+        #Frame for right side data
+        self.telRight = ctk.CTkFrame(master=root,width=175,height=335,border_width=0,
+                                    fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
+        self.telRight.grid(row=2,column=3,padx=5,pady=5)
+        framedata = [self.telLeft, self.telRight] #Left and Right side data frames
         rowData = [(2,1,5,1),(4,1,5,1),(6,1,5,1),(2,3,5,1),(4,3,5,1),(6,3,5,1)] #row,column,padx,pady
         for i in range(len(self.telLabels)):
-            newlabel = ctk.CTkLabel(root, text=f'{self.telLabels[i]}',
+            newlabel = ctk.CTkLabel(framedata[math.floor(i/3)], text=f'{self.telLabels[i]}',
                             text_color="#FFD239",fg_color="#1B1464",
                             width=175,height=50, font=LabelFont)
             newlabel.grid(row=rowData[i][0],column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
 
-            newbutton = ctk.CTkButton(root, textvariable=self.varNames[i],
+            newbutton = ctk.CTkButton(framedata[math.floor(i/3)], textvariable=self.varNames[i],
                         text_color="#FFD239",fg_color="#1B1464",
                         width=175,height=50, font=displayFont,
                         corner_radius=10, border_width=4,
@@ -208,65 +219,70 @@ class Handling:
                                 corner_radius=10, border_width=4,
                                 border_color="#000000", bg_color="transparent")
         self.errorMSG.grid(row=1,column=1,columnspan=3,padx=5,pady=3)
+        #Frame for middle elements
+        self.telMid = ctk.CTkFrame(master=root,width=600,border_width=0,
+                                    fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
+        self.telMid.grid(row=2,column=2,padx=5,pady=5, rowspan=2)
         #Draw the Accelerator position and the brake pressure
-        accel_label = ctk.CTkLabel(root, text="Accelerator Position",
+        accel_label = ctk.CTkLabel(self.telMid, text="Accelerator Position",
                         text_color="#FFD239",fg_color="#1B1464",
                         width=400,height=21, font=LabelFont)
-        accel_label.grid(row=2,column=2,padx=5,pady=1)
+        accel_label.grid(row=1,column=1,padx=5,pady=1)
 
-        brake_label = ctk.CTkLabel(root, text="Brake Pressure",
-                        text_color="#FFD239",fg_color="#1B1464",
-                        width=400,height=21, font=LabelFont)
-        brake_label.grid(row=8,column=2,padx=5,pady=1)
-
-        self.accel = ctk.CTkProgressBar(root, height=25, width=500,
+        self.accel = ctk.CTkProgressBar(self.telMid, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.accel.grid(row=3,column=2,padx=5,pady=1)
+        self.accel.grid(row=2,column=1,padx=5,pady=1)
         self.accel.set(0)
-        self.brake = ctk.CTkProgressBar(root, height=25, width=500,
+
+        brake_label = ctk.CTkLabel(self.telMid, text="Brake Pressure",
+                        text_color="#FFD239",fg_color="#1B1464",
+                        width=400,height=21, font=LabelFont)
+        brake_label.grid(row=4,column=1,padx=5,pady=1)
+        
+        self.brake = ctk.CTkProgressBar(self.telMid, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#FFD239",orientation="horizontal")
-        self.brake.grid(row=9,column=2,padx=5,pady=1)
+        self.brake.grid(row=5,column=1,padx=5,pady=1)
         self.brake.set(0)
 
         #speedometer canvas and placement Note: canvas size/placement changes on different screen sizes for some reason?
-        self.speed_frame = Frame(root,width=650, height=325, bd=0,bg="#1B1464",highlightthickness=0)
-        self.speed_frame.grid(row=4,rowspan=4,column=2,padx=5,pady=5)
-        self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=650, height=325)
-        self.speed.grid(row=1,column=1,rowspan=4,columnspan=3)
+        self.speed_frame = Frame(self.telMid,width=600, height=300, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed_frame.grid(row=3,column=1,padx=5,pady=5)
+        self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=600, height=300)
+        self.speed.pack(side=TOP)
         #Speed digital readout is within the speedometer
         self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.varNames[6], text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
-        self.dig_speed.grid(row=4,column=2)
+        self.dig_speed.pack(side=BOTTOM)
 
-        #Label for the screen
+        #Label that this is the endurance screen
         self.race = ctk.CTkLabel(root, text="HANDLING",
                                  text_color="#FFD239",fg_color="#1B1464",
-                                 width=300,height=50, font=WarningFont)
-        self.race.grid(row=10,column=2,padx=5,pady=5)
+                                 width=175,height=50, font=LabelFont)
+        self.race.grid(row=3,column=1,padx=5,pady=3)
 
     # repeatedly called function for drawing the speedometer
     def draw_speed(self,speed,max_speed,gradations,velocity):
-        speed.create_oval(0,0,650,650, fill="#242424",outline="")#grey outline of speedometer (650x650)
-        speed.create_arc(25,25,625,625,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (600x600)
-        speed.create_oval(50,50,600,600, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (575x575)
-        circle_center = [325,325]
+        speed.create_oval(0,0,600,600, fill="#242424",outline="")#grey outline of speedometer (600x600)
+        speed.create_arc(25,25,575,575,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (575x575)
+        speed.create_oval(50,50,550,550, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (550x550)
+        circle_center = [300,300]
         #Loop to draw gradations
         for i in range(int(max_speed/5)+1):
             angle = i*math.pi/((max_speed/5))
             xangle = math.cos(angle)
             yangle = -math.sin(angle)
             if (i*5)%gradations == 0:#major Dimension
-                speed.create_line(circle_center[0]+324*xangle,circle_center[1]+324*yangle,
-                                circle_center[0]+310*xangle,circle_center[1]+310*yangle,fill="#FFD239",width=4)
+                speed.create_line(circle_center[0]+299*xangle,circle_center[1]+299*yangle,
+                                circle_center[0]+285*xangle,circle_center[1]+285*yangle,fill="#FFD239",width=4)
                 
             else:#minor dimension
-                speed.create_line(circle_center[0]+324*xangle,circle_center[1]+324*yangle,
-                                circle_center[0]+315*xangle,circle_center[1]+315*yangle,fill="#FFD239",width=2)
+                speed.create_line(circle_center[0]+299*xangle,circle_center[1]+299*yangle,
+                                circle_center[0]+290*xangle,circle_center[1]+290*yangle,fill="#FFD239",width=2)
 
 #for Pitlane testing
 class Testing:
@@ -307,8 +323,8 @@ BPPS Status:\nTractive Status:\nFuses:\n
 screenModes = [Endurance(),Handling(),Testing()] #list of screen classes
 currentMode = 0 #current screen
 tmp2 = 0
-diagnosticVal = ["99","45","540","150","12",
-                 "9000","Good","Good","Enabled","Good"]#list of diagnostic Values
+diagnosticVal = ["0","0","0","0","0",
+                 "0","Good","Good","Enabled","Good"]#list of diagnostic Values
 diagnosticLen = ["2.11","3.13","4.16","5.16",
                  "6.19","7.10","8.12",
                  "9.12","10.16","11.6"]#list of length of diagnostic labels
