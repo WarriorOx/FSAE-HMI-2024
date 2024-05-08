@@ -4,6 +4,12 @@ import math
 import time
 import sqlite3
 
+#To Do
+# Add code to change the color of the gauges when they are above a certain number and give a error
+# Impliment Datalogging
+# Impliment CAN data requesting/recieving
+# Impliment button controls/leds using interupts
+
 #parameters
 width = 1024
 height = 600
@@ -27,11 +33,7 @@ LabelFont = ctk.CTkFont(family="Source Sans Pro Bold", size=24, weight="normal")
 displayFont = ctk.CTkFont(family="Source Sans Pro Bold", size=28, weight="normal")
 WarningFont = ctk.CTkFont(family="Source Sans Pro Bold", size=40, weight="normal")
 speedFont = ctk.CTkFont(family="Source Sans Pro Bold", size = 60, weight="normal")
-#for endurance race
-# make speedometer smaller, make temperature and power/lap time larger
-# Add brake bias meter to both screens
-# Add code to change the color of the gauges when they are above a certain number and give a error
-# make the side gauge clusters a frame and the label+gauges a frame to fix the spacing issues
+
 class Endurance:
 
     def __init__(self):
