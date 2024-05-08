@@ -10,6 +10,17 @@ import sqlite3
 # Impliment CAN data requesting/recieving
 # Impliment button controls/leds using interupts
 
+#################################################################################################
+
+#CAN Communication Section (functions only)
+
+#################################################################################################
+
+#Data logging Code Section (functions only)
+
+#################################################################################################
+
+#Screen Code
 #parameters
 width = 1024
 height = 600
@@ -34,6 +45,7 @@ displayFont = ctk.CTkFont(family="Source Sans Pro Bold", size=28, weight="normal
 WarningFont = ctk.CTkFont(family="Source Sans Pro Bold", size=40, weight="normal")
 speedFont = ctk.CTkFont(family="Source Sans Pro Bold", size = 60, weight="normal")
 
+#for Endurance Race
 class Endurance:
 
     def __init__(self):
@@ -256,6 +268,7 @@ class Handling:
                 speed.create_line(circle_center[0]+324*xangle,circle_center[1]+324*yangle,
                                 circle_center[0]+315*xangle,circle_center[1]+315*yangle,fill="#FFD239",width=2)
 
+#for Pitlane testing
 class Testing:
 
     def __init__(self):
@@ -299,6 +312,11 @@ diagnosticVal = ["99","45","540","150","12",
 diagnosticLen = ["2.11","3.13","4.16","5.16",
                  "6.19","7.10","8.12",
                  "9.12","10.16","11.6"]#list of length of diagnostic labels
+
+
+#################################################################################################
+
+
 #Update loop
 while True:
     #redraw the screen when mode is changed
