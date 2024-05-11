@@ -44,7 +44,7 @@ class DataLogging():
         );
     '''
     #check connection to DB, useful to run when there is an error
-    def connectDB(conn):
+    def connectDB(self, conn):
         try:
             conn.cursor()
         except:
@@ -52,7 +52,7 @@ class DataLogging():
             return(conn)
 
     #create data table if not exists, useful to run when there is an error
-    def createTable(conn, tableSQL):
+    def createTable(self, conn, tableSQL):
         tmp = conn.cursor()
         tmp.execute(tableSQL)
         conn.commit()
@@ -65,7 +65,7 @@ class DataLogging():
 
 
     #function to be run each loop to log data to DB input DB connection and sensor_data list
-    def logData(conn, sensor_data):
+    def logData(self, conn, sensor_data):
         tmp = conn.cursor()
         #this SQL needs to be updated to reflect variable change and DB structure change
         tmp.execute('''INSERT INTO telemetry_data 
