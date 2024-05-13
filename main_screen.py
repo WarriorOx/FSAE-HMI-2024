@@ -3,6 +3,7 @@ from tkinter import *
 import math
 import time
 import sqlite3
+#import Rpi.GPIO as GPIO
 
 #To Do
 # Add code to change the color of the gauges when they are above a certain number and give a error
@@ -72,6 +73,28 @@ class DataLogging():
                     (GPSLocation, Acceleration3Axis, Direction3Axis) 
                     VALUES (?, ?, ?)''', sensor_data)
         conn.commit()
+
+#################################################################################################
+
+# Raspberry Pi Pin assignments and initialization
+
+#pin numbers (button,button,led,led)
+pin = [0,1,2,3]
+
+#GPIO.setmode(GPIO.BCM)
+#GPIO.setup(gpionumber, GPIO.IN)
+
+#################################################################################################
+
+# Interrupt Code
+
+def interrupt_1():
+    #code for interrupt here
+    print()
+
+
+#GPIO.add_event_detect(pin-no, GPIO.FALLING, callback=interrupt_1, bouncetime=100) #rising edge detection on a pin
+#GPIO.add_event_detect(pin-no, GPIO.FALLING, callback=interrupt_1, bouncetime=100) #rising edge detection on a pin
 
 #################################################################################################
 
@@ -406,6 +429,7 @@ while True:
     #test = telNames[0]
     #test.configure(fg_color='lime')
     
+    #code for race screens here
     if currentMode !=2:
         tmp = screen.accel.get() + 0.005
         if tmp >=1:
@@ -421,7 +445,7 @@ while True:
         velocity = -(tmp/max_speed)*180 #convert speed to degrees
         screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
         screen.draw_speed(screen.speed,max_speed,gradations,velocity)
-        #testing
+        #testing speedometer
         if tmp == 160:
             tmp = 0
             screen.varNames[6].set(str(tmp)+" KM/H")#classes retain their values even after screen is changed
@@ -435,6 +459,8 @@ while True:
             tmp += 1
         #testing end
         screen.varNames[6].set(str(tmp)+" KM/H")
+
+    #code for pitlane screen
     elif currentMode == 2:
         for val in range(len(diagnosticVal)):
             try:
@@ -445,6 +471,7 @@ while True:
                 screen.diagnosticBox.delete(diagnosticLen[val],diagnosticLen[val].partition(".")[0]+".end")#delete previous value
                 screen.diagnosticBox.insert(diagnosticLen[val],text=diagnosticVal[val])#write next value
 
+        #code to cycle the screens (put this in the button interrupt along with the code to generate the next screen)
         if tmp2 >= 160:
             tmp2=0
             currentMode=0
