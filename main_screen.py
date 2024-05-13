@@ -17,7 +17,7 @@ import sqlite3
 
 #################################################################################################
 
-#CAN Communication Section (functions/setup only)
+#CAN Communication Section (Use interrupts to update values based on CAN signals?)
 
 sensor_data = []
 
