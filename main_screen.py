@@ -30,18 +30,32 @@ class DataLogging():
     tableSQL = '''
         CREATE TABLE IF NOT EXISTS telemetry_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            DateTime DATETIME,
             Speed REAL,
             MotorTemperature REAL,
-            CoolantTemperature REAL,
+            CoolantTemperature1 REAL,
+            CoolantTemperature2 REAL,
+            CoolantTemperature3 REAL,
             CoolantFlowRate REAL,
             MotorCurrent REAL,
-            BatteryVoltage REAL,
-            BatteryTemperature REAL,
+            HVBatteryVoltage REAL,
+            HVBatteryTemperature REAL,
             LVBatteryVoltage REAL,
-            GPSLocation TEXT,
-            Acceleration3Axis TEXT,
-            Direction3Axis TEXT,
-            LapTime REAL
+            Longitude REAL,
+            Latitude REAL,
+            yaw REAL,
+            Pitch REAL,
+            Roll REAL,  
+            AccelerationX REAL,
+            AccelerationY REAL,
+            AccelerationZ REAL,
+            MagnetoX REAL,
+            MagnetoY REAL,
+            MagnetoZ INTEGER,
+            MaxAcceleration REAL,
+            TopSpeed INTEGER,
+            LapTime INTEGER,
+            RunStarted BOOLEAN
         );
     '''
     #check connection to DB, useful to run when there is an error
@@ -69,9 +83,31 @@ class DataLogging():
     def logData(self, conn, sensor_data):
         tmp = conn.cursor()
         #this SQL needs to be updated to reflect variable change and DB structure change
-        tmp.execute('''INSERT INTO telemetry_data 
-                    (GPSLocation, Acceleration3Axis, Direction3Axis) 
-                    VALUES (?, ?, ?)''', sensor_data)
+        tmp.execute('''INSERT INTO telemetry_data
+                    (Speed, MotorTemperature,CoolantTemperature1 ,
+            CoolantTemperature2,
+            CoolantTemperature3 ,
+            CoolantFlowRate ,
+            MotorCurrent ,
+            HVBatteryVoltage ,
+            HVBatteryTemperature ,
+            LVBatteryVoltage ,
+            Longitude ,
+            Latitude,
+            yaw ,
+            Pitch ,
+            Roll ,  
+            AccelerationX ,
+            AccelerationY ,
+            AccelerationZ ,
+            MagnetoX ,
+            MagnetoY ,
+            MagnetoZ ,
+            MaxAcceleration ,
+            TopSpeed ,
+            LapTime ,
+            RunStarted   )
+            VALUES (?, ?, ?)''', sensor_data)
         conn.commit()
 
 #################################################################################################
