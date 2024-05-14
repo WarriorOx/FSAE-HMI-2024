@@ -124,13 +124,35 @@ pin = [0,1,2,3]
 
 # Interrupt Code
 
-def interrupt_1():
-    #code for interrupt here
+#switch screen button
+def interrupt_1(current, screenvar, main):
+
+    screenModes = [Endurance(),Handling(),Testing()] #list of screen classes
+
+    if current >= 2:
+        current = 0
+    else:
+        current += 1
+    
+    #Delete and redraw screen when changing the screen
+    for widget in root.winfo_children():#clear screen
+        widget.destroy()
+
+    main.update_idletasks()#update screen
+    main.update()
+    
+    if not root.winfo_children():#Redraw screen
+        screenvar = screenModes[current]
+        screenvar.telemetry_make()
+    
+    return current, screenvar, main
+
+#Screen Function Button
+def interrupt_2():
     print()
 
-
 #GPIO.add_event_detect(pin-no, GPIO.FALLING, callback=interrupt_1, bouncetime=100) #rising edge detection on a pin
-#GPIO.add_event_detect(pin-no, GPIO.FALLING, callback=interrupt_1, bouncetime=100) #rising edge detection on a pin
+#GPIO.add_event_detect(pin-no, GPIO.FALLING, callback=interrupt_2, bouncetime=100) #rising edge detection on a pin
 
 #################################################################################################
 
@@ -446,15 +468,17 @@ diagnosticLen = ["2.11","3.13","4.16","5.16",
 
 #################################################################################################
 
+#test
+xxxx= DataLogging()
 
 #Update loop
 while True:
-    #redraw the screen when mode is changed
+    
+    #redraw the screen when mode is changed/on startup
     if not root.winfo_children():
-        #print(str(currentMode) + "\n")
         screen = screenModes[currentMode]
         screen.telemetry_make()
-
+    
     #tmp = bTvar.get()
     #tmp = str(int(tmp[0:-2]) + 1) + "°C"
     #bTvar.set(tmp)
@@ -467,17 +491,20 @@ while True:
     
     #code for race screens here
     if currentMode !=2:
+        #testing
         tmp = screen.accel.get() + 0.005
         if tmp >=1:
             tmp=0
+        #end testing
         screen.accel.set(tmp)
-
+        #testing
         tmp = screen.brake.get() + 0.005
         if tmp >=1:
             tmp=0
+        #end testing
         screen.brake.set(tmp)
         
-        tmp=int(screen.varNames[6].get()[0:-5])
+        tmp=int(screen.varNames[6].get()[0:-5]) #testing/end testing
         velocity = -(tmp/max_speed)*180 #convert speed to degrees
         screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
         screen.draw_speed(screen.speed,max_speed,gradations,velocity)
@@ -485,18 +512,16 @@ while True:
         if tmp == 160:
             tmp = 0
             screen.varNames[6].set(str(tmp)+" KM/H")#classes retain their values even after screen is changed
-            for widget in root.winfo_children():#clear screen
-                widget.destroy()
-            if currentMode < 2:#change screen mode
-                currentMode +=1
-            else:
-                currentMode = 0
+            tmp1 = interrupt_1(currentMode,screen,root)
+            currentMode = tmp1[0]#these need to be integrated into the function somehow
+            screen = tmp1[1]
+            root = tmp1[2]
         else:
             tmp += 1
-        #testing end
-        screen.varNames[6].set(str(tmp)+" KM/H")
+            #testing end
+            screen.varNames[6].set(str(tmp)+" KM/H")
 
-    #code for pitlane screen
+    #code for pitlane screen testing
     elif currentMode == 2:
         for val in range(len(diagnosticVal)):
             try:
@@ -507,12 +532,13 @@ while True:
                 screen.diagnosticBox.delete(diagnosticLen[val],diagnosticLen[val].partition(".")[0]+".end")#delete previous value
                 screen.diagnosticBox.insert(diagnosticLen[val],text=diagnosticVal[val])#write next value
 
-        #code to cycle the screens (put this in the button interrupt along with the code to generate the next screen)
+        #code to cycle the screens for testing
         if tmp2 >= 160:
             tmp2=0
-            currentMode=0
-            for widget in root.winfo_children():#clear screen
-                widget.destroy()
+            tmp1 = interrupt_1(currentMode,screen,root)
+            currentMode = tmp1[0]
+            screen = tmp1[1]
+            root = tmp1[2]
         else:
             tmp2 +=1
 
