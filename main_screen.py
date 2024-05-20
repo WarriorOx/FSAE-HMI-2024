@@ -10,6 +10,7 @@ import sqlite3
 # Impliment Datalogging
 # Impliment CAN data requesting/recieving
 # Impliment button controls/leds using interupts
+# Replace speed variable with item from sensor_data list
 
 #Nice to have
 # Send data from VCU at a set frequency (ie. every 10ms) which some data is averaged over (ie. temperature)
@@ -26,7 +27,6 @@ sensor_data = []
 #Data logging Code Section
 class DataLogging():
 
-    #this query needs to be updated to reflect new table requirements
     tableSQL = '''
         CREATE TABLE IF NOT EXISTS telemetry_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,9 +55,10 @@ class DataLogging():
             MaxAcceleration REAL,
             TopSpeed INTEGER,
             LapTime INTEGER,
-            RunStarted BOOLEAN
+            DriveMode BOOLEAN
         );
     '''
+    #DriveMode is 0 when in neutral, 1 when in drive
     #check connection to DB, useful to run when there is an error
     def connectDB(self, conn):
         try:
@@ -106,54 +107,61 @@ class DataLogging():
             MaxAcceleration ,
             TopSpeed ,
             LapTime ,
-            RunStarted   )
+            DriveMode   )
             VALUES (?, ?, ?)''', sensor_data)
         conn.commit()
 
 #################################################################################################
-
+'''
 # Raspberry Pi Pin assignments and initialization
 
 #pin numbers (button,button,led,led)
-pin = [0,1,2,3]
+pin = [17,27,22,23]
 
-#GPIO.setmode(GPIO.BCM)
-#GPIO.setup(gpionumber, GPIO.IN)
+GPIO.setmode(GPIO.BCM)
+for i in range(len(pin)):
+    if math.floor(i/2) == 0:
+        GPIO.setup(pin[i], GPIO.IN)
+    else:
+        GPIO.setup(pin[i], GPIO.OUT)
+'''
 
 #################################################################################################
 
 # Interrupt Code
-
+'''
 #switch screen button
-def interrupt_1(current, screenvar, main):
-
+def interrupt_1():
+    global root
+    global screen
+    global currentMode
     screenModes = [Endurance(),Handling(),Testing()] #list of screen classes
 
-    if current >= 2:
-        current = 0
+    if currentMode >= 2:
+        currentMode = 0
     else:
-        current += 1
+        currentMode += 1
     
+    screen.varNames[6].set(str(speed)+" KM/H")#classes retain their values even after screen is changed
+
     #Delete and redraw screen when changing the screen
     for widget in root.winfo_children():#clear screen
         widget.destroy()
 
-    main.update_idletasks()#update screen
-    main.update()
+    root.update_idletasks()#update screen
+    root.update()
     
     if not root.winfo_children():#Redraw screen
-        screenvar = screenModes[current]
-        screenvar.telemetry_make()
-    
-    return current, screenvar, main
+        screen = screenModes[currentMode]
+        screen.telemetry_make()
 
 #Screen Function Button
 def interrupt_2():
     print()
 
-#GPIO.add_event_detect(pin-no, GPIO.FALLING, callback=interrupt_1, bouncetime=100) #rising edge detection on a pin
-#GPIO.add_event_detect(pin-no, GPIO.FALLING, callback=interrupt_2, bouncetime=100) #rising edge detection on a pin
-
+GPIO.add_event_detect(17, GPIO.FALLING, callback=interrupt_1, bouncetime=100) #rising edge detection on a pin
+GPIO.add_event_detect(27, GPIO.FALLING, callback=interrupt_2, bouncetime=100) #rising edge detection on a pin
+'''
 #################################################################################################
 
 #Screen Code
@@ -426,10 +434,10 @@ class Testing:
     def __init__(self):
         #diagnosics Labels
         self.diaText = '''Diagnostics
-Motor Temp:\nBattery Temp:\nBattery Voltage:\nBattery Current:
-LV Battery Voltage:\nMotor RPM:\nBSPD Status:
-BPPS Status:\nTractive Status:\nFuses:\n
-'''
+            Motor Temp:\nBattery Temp:\nBattery Voltage:\nBattery Current:
+            LV Battery Voltage:\nMotor RPM:\nBSPD Status:
+            BPPS Status:\nTractive Status:\nFuses:\n
+            '''
 
     def telemetry_make(self):
         self.Highlight = ctk.CTkTextbox(root,width = 500,height = 250,
@@ -467,11 +475,45 @@ diagnosticLen = ["2.11","3.13","4.16","5.16",
 
 
 #################################################################################################
+'''
+#Final Version update loop
+while True:
 
-#test
-xxxx= DataLogging()
+    #draw screen when not already drawn
+    if not root.winfo_children():
+        screen = screenModes[currentMode]
+        screen.telemetry_make()
 
-#Update loop
+    #Code for Endurance and Handling
+    if currentMode != 2:
+        print()
+        screen.accel.set()#set accelerator position bar
+        screen.brake.set()#set brake pressure bar
+
+        velocity = -(speed/max_speed)*180 #convert speed to degrees
+        screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
+        screen.draw_speed(screen.speed,max_speed,gradations,velocity)
+        
+        #Set telemetry Values
+        screen.varNames[1].set(batt-temp + "°C") #set battery temp
+
+        if batt-temp < 35: #change label color for warning
+            test = screen.telNames[1]
+            test.configure(fg_color='#1B1464') #navy
+        elif batt-temp >= 35 and batt-temp < 60 : #between 35 and 59
+            test = screen.telNames[1]
+            test.configure(fg_color='#d47a13') #orange
+        else: 
+            test = screen.telNames[1]
+            test.configure(fg_color='Crimson') #red
+
+    #Code for testing screen
+    else:
+        print()
+'''
+data_x = DataLogging()
+
+#Update loop for testing
 while True:
     
     #redraw the screen when mode is changed/on startup
@@ -503,23 +545,34 @@ while True:
             tmp=0
         #end testing
         screen.brake.set(tmp)
-        
-        tmp=int(screen.varNames[6].get()[0:-5]) #testing/end testing
+        #testing
+        tmp = screen.varNames[1].get()
+        tmp = str(int(tmp[0:-2]) + 1) + "°C"
+        if int(tmp[0:-2]) >= 90:
+            tmp = str(0) + "°C"
+        if int(tmp[0:-2]) < 35: #change label color for warning
+            test = screen.telNames[1]
+            test.configure(fg_color='#1B1464') #navy
+        elif int(tmp[0:-2]) >= 35 and int(tmp[0:-2]) < 60 :
+            test = screen.telNames[1]
+            test.configure(fg_color='#d47a13') #orange
+        else: 
+            test = screen.telNames[1]
+            test.configure(fg_color='Crimson') #red
+
+        screen.varNames[1].set(tmp)
+        #end testing
+        tmp=int(screen.varNames[6].get()[0:-5]) #testing this line only
         velocity = -(tmp/max_speed)*180 #convert speed to degrees
         screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
         screen.draw_speed(screen.speed,max_speed,gradations,velocity)
         #testing speedometer
-        if tmp == 160:
+        if tmp >= 160:
             tmp = 0
-            screen.varNames[6].set(str(tmp)+" KM/H")#classes retain their values even after screen is changed
-            tmp1 = interrupt_1(currentMode,screen,root)
-            currentMode = tmp1[0]#these need to be integrated into the function somehow
-            screen = tmp1[1]
-            root = tmp1[2]
         else:
             tmp += 1
             #testing end
-            screen.varNames[6].set(str(tmp)+" KM/H")
+        screen.varNames[6].set(str(tmp)+" KM/H")
 
     #code for pitlane screen testing
     elif currentMode == 2:
@@ -535,10 +588,6 @@ while True:
         #code to cycle the screens for testing
         if tmp2 >= 160:
             tmp2=0
-            tmp1 = interrupt_1(currentMode,screen,root)
-            currentMode = tmp1[0]
-            screen = tmp1[1]
-            root = tmp1[2]
         else:
             tmp2 +=1
 
