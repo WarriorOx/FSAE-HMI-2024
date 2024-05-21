@@ -203,7 +203,7 @@ class Endurance:
         mTvar = ctk.StringVar(value = "0°C")
         pOvar = ctk.StringVar(value = "0 kW")
         lPvar = ctk.StringVar(value = "0:00")
-        aPvar = ctk.StringVar(value = "0 kW/lap")
+        aPvar = ctk.StringVar(value = "0 kWh/lap")
         speed_val = ctk.StringVar(value="0 KM/H")
         self.varNames = [mTvar,bTvar,bCvar,pOvar,lPvar,aPvar,speed_val]
 
