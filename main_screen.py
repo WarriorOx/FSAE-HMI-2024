@@ -184,7 +184,7 @@ root.title("FSAE Dashboard")
 root.grid_columnconfigure((1,2,3), weight=1)
 
 #Fonts
-diagnosticFont = ctk.CTkFont(family="Source Sans Pro Bold", size=14, weight="normal")
+diagnosticFont = ctk.CTkFont(family="Source Sans Pro Bold", size=14, weight="normal") #test changing family name and weight
 LabelFont = ctk.CTkFont(family="Source Sans Pro Bold", size=24, weight="normal")
 displayFont = ctk.CTkFont(family="Source Sans Pro Bold", size=28, weight="normal")
 WarningFont = ctk.CTkFont(family="Source Sans Pro Bold", size=40, weight="normal")
