@@ -3,7 +3,7 @@ from tkinter import *
 import math
 import time
 import sqlite3
-#import Rpi.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 #To Do
 # Add code to change the color of the gauges when they are above a certain number and give a error
@@ -31,7 +31,7 @@ class DataLogging():
         CREATE TABLE IF NOT EXISTS telemetry_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             DateTime DATETIME,
-            Speed REAL,
+            Speed INTEGER,
             MotorTemperature REAL,
             CoolantTemperature1 REAL,
             CoolantTemperature2 REAL,
@@ -51,10 +51,10 @@ class DataLogging():
             AccelerationZ REAL,
             MagnetoX REAL,
             MagnetoY REAL,
-            MagnetoZ INTEGER,
+            MagnetoZ REAL,
             MaxAcceleration REAL,
             TopSpeed INTEGER,
-            LapTime INTEGER,
+            LapTime REAL,
             DriveMode BOOLEAN
         );
     '''
@@ -112,56 +112,54 @@ class DataLogging():
         conn.commit()
 
 #################################################################################################
-'''
-# Raspberry Pi Pin assignments and initialization
 
+# Raspberry Pi Pin assignments and initialization
+GPIO.setmode(GPIO.BCM)
 #pin numbers (button,button,led,led)
 pin = [17,27,22,23]
 
+#GPIO.cleanup()
+
 GPIO.setmode(GPIO.BCM)
-for i in range(len(pin)):
-    if math.floor(i/2) == 0:
-        GPIO.setup(pin[i], GPIO.IN)
-    else:
-        GPIO.setup(pin[i], GPIO.OUT)
-'''
+GPIO.setup(pin[0], GPIO.IN)
+GPIO.setup(pin[1], GPIO.IN)
+GPIO.setup(pin[2], GPIO.OUT)
+GPIO.setup(pin[3], GPIO.OUT)
+        
+GPIO.output((pin[2],pin[3]), False)
 
 #################################################################################################
 
 # Interrupt Code
-'''
+led_state2 = False
 #switch screen button
-def interrupt_1():
-    global root
-    global screen
+def interrupt_1(channel):
+    
     global currentMode
-    screenModes = [Endurance(),Handling(),Testing()] #list of screen classes
+    
 
     if currentMode >= 2:
         currentMode = 0
     else:
         currentMode += 1
     
-    screen.varNames[6].set(str(speed)+" KM/H")#classes retain their values even after screen is changed
-
-    #Delete and redraw screen when changing the screen
-    for widget in root.winfo_children():#clear screen
-        widget.destroy()
-
-    root.update_idletasks()#update screen
-    root.update()
     
-    if not root.winfo_children():#Redraw screen
-        screen = screenModes[currentMode]
-        screen.telemetry_make()
-
+    print(channel)
+    global led_state2
+    led_state2 = not led_state2
+    GPIO.output(pin[3],led_state2)
+        
+led_state = False
 #Screen Function Button
-def interrupt_2():
-    print()
+def interrupt_2(channel):
+    global led_state
+    led_state = not led_state
+    GPIO.output(pin[2],led_state)
+    print(channel)
 
-GPIO.add_event_detect(17, GPIO.FALLING, callback=interrupt_1, bouncetime=100) #rising edge detection on a pin
-GPIO.add_event_detect(27, GPIO.FALLING, callback=interrupt_2, bouncetime=100) #rising edge detection on a pin
-'''
+GPIO.add_event_detect(17, GPIO.FALLING, callback=interrupt_1, bouncetime=200) #rising edge detection on a pin
+GPIO.add_event_detect(27, GPIO.FALLING, callback=interrupt_2, bouncetime=200) #rising edge detection on a pin
+
 #################################################################################################
 
 #Screen Code
@@ -178,7 +176,7 @@ velocity = 0 #0 to -180 speed value for the arc
 root = ctk.CTk()
 root.configure(fg_color="#1B1464")
 root.geometry(f"{width}x{height}") #replace with line below when running on PI
-#root.wm_attributes('-fullscreen', True)
+root.wm_attributes('-fullscreen', True)
 root.resizable(False,False)
 root.title("FSAE Dashboard")
 root.grid_columnconfigure((1,2,3), weight=1)
@@ -214,6 +212,7 @@ class Endurance:
                                     fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
         self.telLeft.grid(row=2,column=1,padx=5,pady=5)
         
+        self.telNames = []
         #Frame for right side data
         self.telRight = ctk.CTkFrame(master=root,width=175,height=335,border_width=0,
                                     fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
@@ -334,6 +333,7 @@ class Handling:
                                     fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
         self.telLeft.grid(row=2,column=1,padx=5,pady=5)
         
+        self.telNames = []
         #Frame for right side data
         self.telRight = ctk.CTkFrame(master=root,width=175,height=335,border_width=0,
                                     fg_color="transparent",border_color="#FFFFFF",corner_radius=0)
@@ -429,14 +429,15 @@ class Handling:
                                 circle_center[0]+290*xangle,circle_center[1]+290*yangle,fill="#FFD239",width=2)
 
 #for Pitlane testing
+                
 class Testing:
 
     def __init__(self):
         #diagnosics Labels
-        self.diaText = '''Diagnostics
-            Motor Temp:\nBattery Temp:\nBattery Voltage:\nBattery Current:
-            LV Battery Voltage:\nMotor RPM:\nBSPD Status:
-            BPPS Status:\nTractive Status:\nFuses:\n
+        self.diaText = '''#Diagnostics
+            #Motor Temp:\nBattery Temp:\nBattery Voltage:\nBattery Current:
+           # LV Battery Voltage:\nMotor RPM:\nBSPD Status:
+            #BPPS Status:\nTractive Status:\nFuses:\n
             '''
 
     def telemetry_make(self):
@@ -463,6 +464,7 @@ class Testing:
                                        text_color="#FFFFFF",wrap="word")
         self.diagnosticBox.grid(row=0,rowspan=2,column=1,pady=25,padx=6)
         self.diagnosticBox.insert("0.0",text=self.diaText)
+        ############################################################################
 
 screenModes = [Endurance(),Handling(),Testing()] #list of screen classes
 currentMode = 0 #current screen
@@ -475,42 +477,69 @@ diagnosticLen = ["2.11","3.13","4.16","5.16",
 
 
 #################################################################################################
-'''
+#while True:
+#    speed = 0
 #Final Version update loop
+previousMode = 99
+speed = 0
+batt_temp=0
 while True:
+    
+    if currentMode != previousMode:
+        
+        #screen.varNames[6].set(str(0)+" KM/H")#classes retain their values even after screen is changed
+        previousMode = currentMode
+        #Delete and redraw screen when changing the screen
+        for widget in root.winfo_children():#clear screen
+            widget.destroy()
+            print("Child Killed")
 
+        
+        if not root.winfo_children():#Redraw screen
+            print("Redraw on Switch")
+            screen = screenModes[currentMode]
+            screen.telemetry_make()
+        
+        root.update_idletasks()#update screen
+        root.update()
+        
+    speed = speed +0.1
+    batt_temp += 0.1
+    if speed > 160: speed = 0
+    if batt_temp > 70: batt_temp = 0
     #draw screen when not already drawn
-    if not root.winfo_children():
-        screen = screenModes[currentMode]
-        screen.telemetry_make()
+    #if not root.winfo_children():
+        #screen = screenModes[currentMode]
+        #screen.telemetry_make()
 
     #Code for Endurance and Handling
     if currentMode != 2:
-        print()
-        screen.accel.set()#set accelerator position bar
-        screen.brake.set()#set brake pressure bar
+        screen.accel.set(0)#set accelerator position bar
+        screen.brake.set(0)#set brake pressure bar
 
         velocity = -(speed/max_speed)*180 #convert speed to degrees
         screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
         screen.draw_speed(screen.speed,max_speed,gradations,velocity)
         
         #Set telemetry Values
-        screen.varNames[1].set(batt-temp + "°C") #set battery temp
-
-        if batt-temp < 35: #change label color for warning
+        screen.varNames[1].set(str(int(batt_temp)) + "°C") #set battery temp
+        screen.varNames[6].set(str(int(speed))+" KM/H") #set speed label
+        
+        if batt_temp < 35: #change label color for warning
             test = screen.telNames[1]
             test.configure(fg_color='#1B1464') #navy
-        elif batt-temp >= 35 and batt-temp < 60 : #between 35 and 59
+        elif batt_temp >= 35 and batt_temp < 60 : #between 35 and 59
             test = screen.telNames[1]
             test.configure(fg_color='#d47a13') #orange
         else: 
             test = screen.telNames[1]
             test.configure(fg_color='Crimson') #red
-
+        
     #Code for testing screen
     else:
-        print()
-'''
+        print("arrgh")
+    
+    '''
 data_x = DataLogging()
 
 #Update loop for testing
@@ -590,7 +619,7 @@ while True:
             tmp2=0
         else:
             tmp2 +=1
-
+    '''
     time.sleep(0.01) #here to limit the update rate for testing
     
     root.update_idletasks()
