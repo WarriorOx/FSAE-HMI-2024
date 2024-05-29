@@ -3,7 +3,7 @@ from tkinter import *
 import math
 import time
 import sqlite3
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 #To Do
 # Add code to change the color of the gauges when they are above a certain number and give a error
@@ -112,7 +112,7 @@ class DataLogging():
         conn.commit()
 
 #################################################################################################
-
+'''
 # Raspberry Pi Pin assignments and initialization
 GPIO.setmode(GPIO.BCM)
 #pin numbers (button,button,led,led)
@@ -127,9 +127,9 @@ GPIO.setup(pin[2], GPIO.OUT)
 GPIO.setup(pin[3], GPIO.OUT)
         
 GPIO.output((pin[2],pin[3]), False)
-
+'''
 #################################################################################################
-
+'''
 # Interrupt Code
 led_state2 = False
 #switch screen button
@@ -159,7 +159,7 @@ def interrupt_2(channel):
 
 GPIO.add_event_detect(17, GPIO.FALLING, callback=interrupt_1, bouncetime=200) #rising edge detection on a pin
 GPIO.add_event_detect(27, GPIO.FALLING, callback=interrupt_2, bouncetime=200) #rising edge detection on a pin
-
+'''
 #################################################################################################
 
 #Screen Code
@@ -174,9 +174,10 @@ velocity = 0 #0 to -180 speed value for the arc
 
 #startup
 root = ctk.CTk()
-root.configure(fg_color="#1B1464")
+root.configure(fg_color="#121212")
 root.geometry(f"{width}x{height}") #replace with line below when running on PI
 root.wm_attributes('-fullscreen', True)
+root.wm_attributes('-transparentcolor', '#ab23ff')
 root.resizable(False,False)
 root.title("FSAE Dashboard")
 root.grid_columnconfigure((1,2,3), weight=1)
@@ -221,12 +222,12 @@ class Endurance:
         framedata = [self.telLeft, self.telRight] #Left and Right side data frames
         for i in range(len(self.telLabels)):
             newlabel = ctk.CTkLabel(framedata[math.floor(i/3)], text=f'{self.telLabels[i]}',
-                            text_color="#FFD239",fg_color="#1B1464",
+                            text_color="#FFD239",fg_color="#121212",
                             width=175,height=50, font=LabelFont)
             newlabel.grid(row=rowData[i][0],column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
 
             newbutton = ctk.CTkButton(framedata[math.floor(i/3)], textvariable=self.varNames[i],
-                        text_color="#FFD239",fg_color="#1B1464",
+                        text_color="#FFD239",fg_color="#121212",
                         width=175,height=50, font=displayFont,
                         corner_radius=10, border_width=4,
                         border_color="#000000", bg_color="transparent",)
@@ -248,7 +249,7 @@ class Endurance:
         self.telMid.grid(row=2,column=2,padx=5,pady=5, rowspan=2)
         #Draw the Accelerator position and the brake pressure
         accel_label = ctk.CTkLabel(self.telMid, text="Accelerator Position",
-                        text_color="#FFD239",fg_color="#1B1464",
+                        text_color="#FFFFFC",fg_color="#121212",
                         width=400,height=21, font=LabelFont)
         accel_label.grid(row=1,column=1,padx=5,pady=1)
         self.accel = ctk.CTkProgressBar(self.telMid, height=25, width=500,
@@ -259,7 +260,7 @@ class Endurance:
         self.accel.set(0)
 
         brake_label = ctk.CTkLabel(self.telMid, text="Brake Pressure",
-                        text_color="#FFD239",fg_color="#1B1464",
+                        text_color="#FFD239",fg_color="#121212",
                         width=400,height=21, font=LabelFont)
         brake_label.grid(row=4,column=1,padx=5,pady=1)
 
@@ -271,27 +272,32 @@ class Endurance:
         self.brake.set(0)
 
         #speedometer canvas and placement Note: canvas size/placement changes on different screen sizes for some reason?
-        self.speed_frame = Frame(self.telMid,width=600, height=300, bd=0,bg="#1B1464",highlightthickness=0)
-        self.speed_frame.grid(row=3,column=1,padx=5,pady=5)
-        self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=600, height=300)
-        self.speed.pack(side=TOP)
+        
+
+        self.speed_frame = Frame(self.telMid,width=600,bg="#121212", height=300,bd=0,highlightthickness=0)
+        self.speed_frame.grid(row=3,column=1,padx=0,pady=5)
+        
+        self.speed = Canvas(self.speed_frame,bg="#121212", bd=0,highlightthickness=0,width=600, height=300)
+        self.speed.pack()
+
+        self.digspeed_frame = Frame(self.telMid,width=150,bg="#701212", height=50,bd=0,highlightthickness=0)
+        self.digspeed_frame.grid(row=3,column=1,padx=5,pady=5)
+
+        self.dig_speed = ctk.CTkLabel(self.digspeed_frame,textvariable=self.varNames[6],fg_color="#121212", text_color="#FFFFFC",font=speedFont)
+        self.dig_speed.pack(side="bottom")
         #Speed digital readout is within the speedometer
-        self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.varNames[6], text_color="#FFD239",
-                            fg_color="transparent", width=300,height=75,
-                            font=speedFont,corner_radius=20)
-        self.dig_speed.pack(side=BOTTOM)
+       
+        
 
         #Label that this is the endurance screen
-        self.race = ctk.CTkLabel(root, text="ENDURANCE",
-                                 text_color="#FFD239",fg_color="#1B1464",
-                                 width=175,height=50, font=LabelFont)
+        self.race = ctk.CTkLabel(root, text="ENDURANCE",text_color="#FFFFFC",font=LabelFont)
         self.race.grid(row=3,column=1,padx=5,pady=3)
-
+    
     # repeatedly called function for drawing the speedometer
     def draw_speed(self,speed,max_speed,gradations,velocity):
         speed.create_oval(0,0,600,600, fill="#242424",outline="")#grey outline of speedometer (600x600)
-        speed.create_arc(25,25,575,575,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (575x575)
-        speed.create_oval(50,50,550,550, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (550x550)
+        speed.create_arc(25,25,575,575,extent = velocity,start = 180, fill="#83D429",outline="")#Green speedometer (575x575)
+        speed.create_oval(50,50,550,550, fill="#121212",outline="")#Inner Blue oval that covers the center of the other ovals (550x550)
         circle_center = [300,300]
         #Loop to draw gradations
         for i in range(int(max_speed/5)+1):
@@ -305,7 +311,8 @@ class Endurance:
             else:#minor dimension
                 speed.create_line(circle_center[0]+299*xangle,circle_center[1]+299*yangle,
                                 circle_center[0]+290*xangle,circle_center[1]+290*yangle,fill="#FFD239",width=2)
-
+    
+###############################################################################################################################################################################################################################################
 #for Acceleration, Skidpad and Autocross
 class Handling:
 
@@ -342,12 +349,12 @@ class Handling:
         rowData = [(2,1,5,1),(4,1,5,1),(6,1,5,1),(2,3,5,1),(4,3,5,1),(6,3,5,1)] #row,column,padx,pady
         for i in range(len(self.telLabels)):
             newlabel = ctk.CTkLabel(framedata[math.floor(i/3)], text=f'{self.telLabels[i]}',
-                            text_color="#FFD239",fg_color="#1B1464",
+                            text_color="#FFD239",fg_color="#121212",
                             width=175,height=50, font=LabelFont)
             newlabel.grid(row=rowData[i][0],column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
 
             newbutton = ctk.CTkButton(framedata[math.floor(i/3)], textvariable=self.varNames[i],
-                        text_color="#FFD239",fg_color="#1B1464",
+                        text_color="#FFD239",fg_color="#121212",
                         width=175,height=50, font=displayFont,
                         corner_radius=10, border_width=4,
                         border_color="#000000", bg_color="transparent",)
@@ -369,7 +376,7 @@ class Handling:
         self.telMid.grid(row=2,column=2,padx=5,pady=5, rowspan=2)
         #Draw the Accelerator position and the brake pressure
         accel_label = ctk.CTkLabel(self.telMid, text="Accelerator Position",
-                        text_color="#FFD239",fg_color="#1B1464",
+                        text_color="#FFD239",fg_color="#121212",
                         width=400,height=21, font=LabelFont)
         accel_label.grid(row=1,column=1,padx=5,pady=1)
 
@@ -381,7 +388,7 @@ class Handling:
         self.accel.set(0)
 
         brake_label = ctk.CTkLabel(self.telMid, text="Brake Pressure",
-                        text_color="#FFD239",fg_color="#1B1464",
+                        text_color="#FFD239",fg_color="#121212",
                         width=400,height=21, font=LabelFont)
         brake_label.grid(row=4,column=1,padx=5,pady=1)
         
@@ -393,19 +400,19 @@ class Handling:
         self.brake.set(0)
 
         #speedometer canvas and placement Note: canvas size/placement changes on different screen sizes for some reason?
-        self.speed_frame = Frame(self.telMid,width=600, height=300, bd=0,bg="#1B1464",highlightthickness=0)
+        self.speed_frame = Frame(self.telMid,width=600, height=300, bd=0,bg="#121212",highlightthickness=0)
         self.speed_frame.grid(row=3,column=1,padx=5,pady=5)
-        self.speed = Canvas(self.speed_frame, bd=0,bg="#1B1464",highlightthickness=0,width=600, height=300)
-        self.speed.pack(side=TOP)
+        self.speed = Canvas(self.speed_frame, bd=0,bg="#121212",highlightthickness=0,width=600, height=300)
+        self.speed.pack(side=BOTTOM)
         #Speed digital readout is within the speedometer
         self.dig_speed = ctk.CTkLabel(self.speed_frame,textvariable=self.varNames[6], text_color="#FFD239",
                             fg_color="transparent", width=300,height=75,
                             font=speedFont,corner_radius=20)
-        self.dig_speed.pack(side=BOTTOM)
+        self.dig_speed.pack(side=TOP)
 
         #Label that this is the endurance screen
         self.race = ctk.CTkLabel(root, text="HANDLING",
-                                 text_color="#FFD239",fg_color="#1B1464",
+                                 text_color="#FFFFFF",fg_color="#121212",
                                  width=175,height=50, font=LabelFont)
         self.race.grid(row=3,column=1,padx=5,pady=3)
 
@@ -413,7 +420,7 @@ class Handling:
     def draw_speed(self,speed,max_speed,gradations,velocity):
         speed.create_oval(0,0,600,600, fill="#242424",outline="")#grey outline of speedometer (600x600)
         speed.create_arc(25,25,575,575,extent = velocity,start = 180, fill="#FFD239",outline="")#Yellow speedometer (575x575)
-        speed.create_oval(50,50,550,550, fill="#1B1464",outline="")#Inner Blue oval that covers the center of the other ovals (550x550)
+        speed.create_oval(50,50,550,550, fill="#121212",outline="")#Inner Blue oval that covers the center of the other ovals (550x550)
         circle_center = [300,300]
         #Loop to draw gradations
         for i in range(int(max_speed/5)+1):
@@ -527,7 +534,7 @@ while True:
         
         if batt_temp < 35: #change label color for warning
             test = screen.telNames[1]
-            test.configure(fg_color='#1B1464') #navy
+            test.configure(fg_color='#121212') #navy
         elif batt_temp >= 35 and batt_temp < 60 : #between 35 and 59
             test = screen.telNames[1]
             test.configure(fg_color='#d47a13') #orange
@@ -554,7 +561,7 @@ while True:
     #tmp = str(int(tmp[0:-2]) + 1) + "°C"
     #bTvar.set(tmp)
     #use this to hide error message box
-    #errorMSG.configure(fg_color=test, text_color="#1B1464", border_color="#1B1464")
+    #errorMSG.configure(fg_color=test, text_color="#121212", border_color="#121212")
 
     #code to change the color of the telemetry buttons
     #test = telNames[0]
@@ -581,7 +588,7 @@ while True:
             tmp = str(0) + "°C"
         if int(tmp[0:-2]) < 35: #change label color for warning
             test = screen.telNames[1]
-            test.configure(fg_color='#1B1464') #navy
+            test.configure(fg_color='#121212') #navy
         elif int(tmp[0:-2]) >= 35 and int(tmp[0:-2]) < 60 :
             test = screen.telNames[1]
             test.configure(fg_color='#d47a13') #orange
