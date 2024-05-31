@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,11 +41,17 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan1;
+
+I2C_HandleTypeDef hi2c1;
+
 UART_HandleTypeDef huart3;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
+static const uint8_t Sensor_ADDR = 0x48 << 1; // Use 8-bit address, Left shift for making space of the Read/Write Bit (Might need to change base on the I2C Device.
+static const uint8_t REG_TEMP = 0x00; //Address Temp register (Base on device)
 
 /* USER CODE END PV */
 
@@ -53,6 +60,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
+static void MX_CAN1_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -70,7 +79,10 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	HAL_StatusTypeDef ret; //return value
+	uint8_t buf[32];
+	int16_t val;     //raw Temp Data
+	float temp_c;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -93,6 +105,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
+  MX_CAN1_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -102,10 +116,52 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  //all below Function and calculation can be found in the Sensor Reference Manual
 
+
+	  // Tell Sensor that we want to read from the temp register (object to change)
+	  buf[0] = REG_TEMP;
+	  ret = HAL_I2C_Master_Transmit(&hi2c1, Sensor_ADDR,buf,1,HAL_MAX_DELAY);
+	  if ( ret != HAL_OK){
+		  strcpy((char*)buf,"Error Tx\r\n");
+	  }else{
+
+		  //Read 2 bytes from the temp Reg
+		  ret = HAL_I2C_Master_Receive(&hi2c1, Sensor_ADDR,buf, 2, HAL_MAX_DELAY);
+		  if ( ret != HAL_OK){
+		  		  strcpy((char*)buf,"Error Tx\r\n");
+	  } else {
+
+		//Combine the bytes
+		val =  ((int16_t)buf[0] <<4) | (buf[1] >>4);
+		// Convert to 2's Complement, Since the temp can be negative
+				if (val> 0x7FF){
+					val |= 0xF000;
+				}
+
+		//convert to float temp value (Celsius)
+		temp_c = val *0.0625;
+
+		// Convert temp to Decimal Format
+		temp_c *= 100; // this to seperate decimal and interger part
+		sprintf((char*)buf,
+				"%u.%02u C\r\n",
+				((unsigned int) temp_c / 100),
+				((unsigned int) temp_c % 100));
+
+	  }
+
+	//strcpy((char*)buf,"Hello World\r\n");
+
+	// Note that this is a Blocking function, might want to convert this to the non Blocking
+	//Send out buffer (temp or error message)
+	  HAL_UART_Transmit(&huart3, buf, strlen((char*)buf),HAL_MAX_DELAY);
+	  //wait
+	  HAL_Delay(500);
     /* USER CODE BEGIN 3 */
-  }
+	  }
   /* USER CODE END 3 */
+  }
 }
 
 /**
@@ -152,6 +208,77 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CAN1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN1_Init(void)
+{
+
+  /* USER CODE BEGIN CAN1_Init 0 */
+
+  /* USER CODE END CAN1_Init 0 */
+
+  /* USER CODE BEGIN CAN1_Init 1 */
+
+  /* USER CODE END CAN1_Init 1 */
+  hcan1.Instance = CAN1;
+  hcan1.Init.Prescaler = 16;
+  hcan1.Init.Mode = CAN_MODE_NORMAL;
+  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_2TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan1.Init.TimeTriggeredMode = DISABLE;
+  hcan1.Init.AutoBusOff = DISABLE;
+  hcan1.Init.AutoWakeUp = DISABLE;
+  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.ReceiveFifoLocked = DISABLE;
+  hcan1.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN1_Init 2 */
+
+  /* USER CODE END CAN1_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
