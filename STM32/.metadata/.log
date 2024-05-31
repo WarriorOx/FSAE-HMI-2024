@@ -31,3 +31,6 @@ Command-line arguments:  -os win32 -ws win32 -arch x86_64
 
 !ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2024-05-31 10:41:23.328
 !MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2024-05-31 11:22:49.681
+!MESSAGE Indexed 'Stm32_Nucleo' (25 sources, 85 headers) in 14.1 sec: 5,844 declarations; 33,257 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0051%)
