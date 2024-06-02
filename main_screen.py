@@ -3,6 +3,7 @@ from tkinter import *
 import math
 import time
 import sqlite3
+from can import *
 #import RPi.GPIO as GPIO
 
 #To Do
@@ -262,13 +263,13 @@ class Endurance:
         brake_label = ctk.CTkLabel(self.telMid, text="Brake Pressure",
                         text_color="#FFFFFC",fg_color="#121212",
                         width=400,height=21, font=LabelFont)
-        brake_label.grid(row=6,column=1,padx=5,pady=1)
+        brake_label.grid(row=5,column=1,padx=5,pady=1)
 
         self.brake = ctk.CTkProgressBar(self.telMid, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#AD2323",orientation="horizontal")
-        self.brake.grid(row=5,column=1,padx=5,pady=1)
+        self.brake.grid(row=4,column=1,padx=5,pady=1)
         self.brake.set(0)
 
         #Frame for spedometer canvas
@@ -280,7 +281,7 @@ class Endurance:
 
         #Digital readout needed its own frame for stacking purposes, may overlap on differnt screen sizes, may need adjustment then.
         self.digspeed_frame = Frame(self.telMid,width=100,bg="#701212", height=50,bd=0,highlightthickness=0)
-        self.digspeed_frame.grid(row=4,column=1,padx=5,pady=5)
+        self.digspeed_frame.grid(row=3,column=1,padx=5,pady=5)
 
         self.dig_speed = ctk.CTkLabel(self.digspeed_frame,textvariable=self.varNames[6],fg_color="#121212", text_color="#FFFFFC",font=speedFont)
         self.dig_speed.pack(side="bottom")
@@ -391,13 +392,13 @@ class Handling:
         brake_label = ctk.CTkLabel(self.telMid, text="Brake Pressure",
                         text_color="#FFFFFC",fg_color="#121212",
                         width=400,height=21, font=LabelFont)
-        brake_label.grid(row=6,column=1,padx=5,pady=1)
+        brake_label.grid(row=5,column=1,padx=5,pady=1)
 
         self.brake = ctk.CTkProgressBar(self.telMid, height=25, width=500,
                                         border_width=0,border_color="#000000",
                                         corner_radius=0,fg_color="#242424",
                                         progress_color="#AD2323",orientation="horizontal")
-        self.brake.grid(row=5,column=1,padx=5,pady=1)
+        self.brake.grid(row=4,column=1,padx=5,pady=1)
         self.brake.set(0)
 
         #Frame for spedometer canvas
@@ -409,7 +410,7 @@ class Handling:
 
         #Digital readout needed its own frame for stacking purposes, may overlap on differnt screen sizes, may need adjustment then.
         self.digspeed_frame = Frame(self.telMid,width=150,bg="#701212", height=50,bd=0,highlightthickness=0)
-        self.digspeed_frame.grid(row=4,column=1,padx=5,pady=5)
+        self.digspeed_frame.grid(row=3,column=1,padx=5,pady=5)
 
         self.dig_speed = ctk.CTkLabel(self.digspeed_frame,textvariable=self.varNames[6],fg_color="#121212", text_color="#FFFFFC",font=speedFont)
         self.dig_speed.pack(side="bottom")
