@@ -17,6 +17,8 @@ Code for main driver screen, datalogging and VCU controls
 - Top Speed (Reset from function button)
 - Drive mode (Drive or Neutral)
 - Lap time (endurance only)
+- Break Position
+- Accelerator Position
 
 ## How It Works
 #### Main_Screen.py
