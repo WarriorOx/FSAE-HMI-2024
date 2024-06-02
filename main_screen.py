@@ -116,7 +116,7 @@ class DataLogging():
 # Raspberry Pi Pin assignments and initialization
 GPIO.setmode(GPIO.BCM)
 #pin numbers (button,button,led,led)
-pin = [17,27,22,23]
+pin = [18,4,27,17]
 
 #GPIO.cleanup()
 
@@ -157,8 +157,8 @@ def interrupt_2(channel):
     GPIO.output(pin[2],led_state)
     print(channel)
 
-GPIO.add_event_detect(17, GPIO.FALLING, callback=interrupt_1, bouncetime=200) #rising edge detection on a pin
-GPIO.add_event_detect(27, GPIO.FALLING, callback=interrupt_2, bouncetime=200) #rising edge detection on a pin
+GPIO.add_event_detect(18, GPIO.FALLING, callback=interrupt_1, bouncetime=200) #rising edge detection on a pin
+GPIO.add_event_detect(4, GPIO.FALLING, callback=interrupt_2, bouncetime=200) #rising edge detection on a pin
 '''
 #################################################################################################
 
