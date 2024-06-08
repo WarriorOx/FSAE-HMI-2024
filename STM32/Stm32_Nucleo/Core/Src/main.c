@@ -90,6 +90,7 @@ int main(void)
 	uint8_t buf[32];
 	int16_t val;     //raw Temp Data
 	float temp_c;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -484,6 +485,9 @@ static void MX_GPIO_Init(void)
                           |RELAY_03_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, Test_PinO1_Pin|Test_PinO2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : GP16_Pin GP15_Pin GP18_Pin */
@@ -535,6 +539,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GP2_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : Test_PinO1_Pin Test_PinO2_Pin */
+  GPIO_InitStruct.Pin = Test_PinO1_Pin|Test_PinO2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pin : PA15 */
   GPIO_InitStruct.Pin = GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -567,6 +578,7 @@ void Error_Handler(void)
   __disable_irq();
   while (1)
   {
+
   }
   /* USER CODE END Error_Handler_Debug */
 }

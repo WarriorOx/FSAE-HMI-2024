@@ -121,6 +121,10 @@ void Error_Handler(void);
 #define USB_OverCurrent_GPIO_Port GPIOG
 #define GP2_Pin GPIO_PIN_6
 #define GP2_GPIO_Port GPIOC
+#define Test_PinO1_Pin GPIO_PIN_8
+#define Test_PinO1_GPIO_Port GPIOC
+#define Test_PinO2_Pin GPIO_PIN_9
+#define Test_PinO2_GPIO_Port GPIOC
 #define USB_SOF_Pin GPIO_PIN_8
 #define USB_SOF_GPIO_Port GPIOA
 #define USB_VBUS_Pin GPIO_PIN_9
