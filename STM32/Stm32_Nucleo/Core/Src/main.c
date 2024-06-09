@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,24 +71,41 @@ static void MX_ADC3_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_CAN2_Init(void);
 /* USER CODE BEGIN PFP */
-
+int _write(int file, char *ptr, int len)
+{
+  /* Implement your write code here. This is
+     used by puts and printf for example */
+  int i=0;
+  for(i=0 ; i<len ; i++)
+    ITM_SendChar((*ptr++));
+  return len;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+int test = 0;
 CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
 
 uint8_t TxData[8];
-uint8_t RxData[8];
+uint8_t RxData[32];
 
-uint32_t TxMailbox[4];
+uint32_t TxMailbox[3];
 uint8_t count = 0;
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan){
-	HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader,RxData);
+	if(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader,RxData) != HAL_OK){
+		printf("Error Rev \n");
+	}
+	if ((RxHeader.StdId == 0x701)){
+		test = 1;
+	}
 }
+
+
+
 /* USER CODE END 0 */
 
 /**
@@ -102,7 +120,7 @@ int main(void)
 	//uint8_t buf[32];
 	//int16_t val;     //raw Temp Data
 	//float temp_c;
-
+	//printf("Hello Main \n");
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -134,38 +152,46 @@ int main(void)
   HAL_CAN_Start(&hcan1);
 
   // Activation of notification
-  HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
+  if(HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK){
+	  printf("Error REC \n");
+  }
 
-  TxHeader.DLC = 1; //Length of Data we going to send
+  TxHeader.DLC = 2; //Length of Data we going to send
   TxHeader.ExtId = 0; // Basic Protocol keep 0
   TxHeader.IDE = CAN_ID_STD; //Use Standard instead of Extended ID
   TxHeader.RTR = CAN_RTR_DATA; //sending Data
-  TxHeader.StdId = 0x103; // This Device ID
+  TxHeader.StdId = 0x00; // Sent to ID 00 = NMT Command/ Start up procedure
   TxHeader.TransmitGlobalTime = DISABLE;
 
-  TxData[0] = 0x01;
-  TxData[0] = 0x02;
-  TxData[0] = 0x03;
-  TxData[0] = 0x04;
+  TxData[0] = 0x05; // Write Operational mode
 
-  if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, &TxData, &TxMailbox[0]) != HAL_OK){
+
+
+
+  /*if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, &TxData[0], &TxMailbox[0]) != HAL_OK){
 	  Error_Handler();
   }
+*/
 
-  if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, &TxData, &TxMailbox[1]) != HAL_OK){
-	  Error_Handler();
-  }
-  if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, &TxData, &TxMailbox[2]) != HAL_OK){
-  	  Error_Handler();
-    }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
 
+	  if(test == 1){
+		  printf("received \n");
+	  }
+	  else{
+		  printf("Empty \n");
+	  }
+    /* USER CODE END WHILE */
+	 //printf("Printf Test \n\r");
+	 //printf(" ** Test Complete ** \n\r");
+	 //for (int i = 0; i < sizeof(RxData); i++) {
+	 //	  printf("%i",RxData[i]);
+	 //	}
     /* USER CODE BEGIN 3 */
 	  }
   /* USER CODE END 3 */
@@ -337,11 +363,11 @@ static void MX_CAN1_Init(void)
 
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 16;
+  hcan1.Init.Prescaler = 6;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_2TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_3TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_3TQ;
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = DISABLE;
   hcan1.Init.AutoWakeUp = DISABLE;
@@ -356,16 +382,17 @@ static void MX_CAN1_Init(void)
 
   CAN_FilterTypeDef canfilterconfig;
 
+
   canfilterconfig.FilterActivation = CAN_FILTER_ENABLE;
   canfilterconfig.FilterBank =10; //Specify which filter bank you wish to use from 0 to SlaveStartFilter Bank
   canfilterconfig.FilterFIFOAssignment = CAN_RX_FIFO0;
-  canfilterconfig.FilterIdHigh = 0x103 <<5; // we shift 5 here to exclude the extended ID just in case we receiving extended ID.
+  canfilterconfig.FilterIdHigh = 0x0000; // we shift 5 here to exclude the extended ID just in case we receiving extended ID.
   canfilterconfig.FilterIdLow = 0x0000;
-  canfilterconfig.FilterMaskIdHigh = 0x103 <<5; // We pick what bit will be compare between the Incoming Id Vs This device ID
+  canfilterconfig.FilterMaskIdHigh = 0x0000; // We pick what bit will be compare between the Incoming Id Vs This device ID
   canfilterconfig.FilterMaskIdLow = 0x0000;
   canfilterconfig.FilterMode = CAN_FILTERMODE_IDMASK; //2 type of filter here. Mask or Identity mode
   canfilterconfig.FilterScale = CAN_FILTERSCALE_32BIT; // Specify what kind of mask
-  canfilterconfig.SlaveStartFilterBank = 0; //2 filter bank, you can chose how many filter for Can1<Master> and Can2<Slave>
+  canfilterconfig.SlaveStartFilterBank = 13; //2 filter bank, you can chose how many filter for Can1<Master> and Can2<Slave>
   // If i put 13 here, that mean 13 filter out of 27 are allocated to Slave filter
 
   HAL_CAN_ConfigFilter(&hcan1,&canfilterconfig);
