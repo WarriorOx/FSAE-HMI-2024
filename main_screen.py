@@ -3,7 +3,7 @@ from tkinter import *
 import math
 import time
 import sqlite3
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 #To Do
 # Add code to change the color of the gauges when they are above a certain number and give a error
@@ -112,7 +112,7 @@ class DataLogging():
         conn.commit()
 
 #################################################################################################
-
+'''
 # Raspberry Pi Pin assignments and initialization
 GPIO.setmode(GPIO.BCM)
 #pin numbers (button,button,led,led)
@@ -159,7 +159,7 @@ def interrupt_2(channel):
 
 GPIO.add_event_detect(17, GPIO.FALLING, callback=interrupt_1, bouncetime=200) #rising edge detection on a pin
 GPIO.add_event_detect(27, GPIO.FALLING, callback=interrupt_2, bouncetime=200) #rising edge detection on a pin
-
+'''
 #################################################################################################
 
 #Screen Code
@@ -176,7 +176,7 @@ velocity = 0 #0 to -180 speed value for the arc
 root = ctk.CTk()
 root.configure(fg_color="#1B1464")
 root.geometry(f"{width}x{height}") #replace with line below when running on PI
-root.wm_attributes('-fullscreen', True)
+#root.wm_attributes('-fullscreen', True)
 root.resizable(False,False)
 root.title("FSAE Dashboard")
 root.grid_columnconfigure((1,2,3), weight=1)
@@ -233,7 +233,7 @@ class Endurance:
             newbutton.grid(row=rowData[i][0]+1,column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
             self.telNames.append(newbutton)
         #draw the error message button
-        error = ctk.StringVar(value = "Initial Value")
+        error = ctk.StringVar(value = "CAN BUS FATAL ERROR")
         self.isError = False
         self.prevError = False
         self.errorMSG = ctk.CTkButton(root, textvariable=error,
@@ -354,7 +354,7 @@ class Handling:
             newbutton.grid(row=rowData[i][0]+1,column=rowData[i][1],padx=rowData[i][2],pady=rowData[i][3])
             self.telNames.append(newbutton)
         #draw the error message button
-        error = ctk.StringVar(value = "Initial Value")
+        error = ctk.StringVar(value = "CAN BUS FATAL ERROR")
         self.isError = False
         self.prevError = False
         self.errorMSG = ctk.CTkButton(root, textvariable=error,
@@ -483,6 +483,11 @@ diagnosticLen = ["2.11","3.13","4.16","5.16",
 previousMode = 99
 speed = 0
 batt_temp=0
+brake = 0
+battpercent = 100
+power = 0
+powerdirect = True
+motortemp = 0
 while True:
     
     if currentMode != previousMode:
@@ -505,8 +510,20 @@ while True:
         
     speed = speed +0.1
     batt_temp += 0.1
+    motortemp += 0.1
+    brake +=0.01
+    battpercent -= 0.1
+    if powerdirect == True and power < 80: 
+        power += 0.5
+    else:
+        powerdirect = False
+        power -= 0.5
+    if power < 1: powerdirect = True
     if speed > 160: speed = 0
     if batt_temp > 70: batt_temp = 0
+    if brake > 1: brake = 0
+    if battpercent < 1 : battpercent = 100
+    if motortemp > 150: motortemp = 0
     #draw screen when not already drawn
     #if not root.winfo_children():
         #screen = screenModes[currentMode]
@@ -514,25 +531,50 @@ while True:
 
     #Code for Endurance and Handling
     if currentMode != 2:
-        screen.accel.set(0)#set accelerator position bar
-        screen.brake.set(0)#set brake pressure bar
+        screen.accel.set(brake)#set accelerator position bar
+        screen.brake.set(brake)#set brake pressure bar
 
         velocity = -(speed/max_speed)*180 #convert speed to degrees
         screen.speed.delete("all") #clear canvas before re-drawing to save memory/speed
         screen.draw_speed(screen.speed,max_speed,gradations,velocity)
         
         #Set telemetry Values
+        screen.varNames[0].set(str(int(motortemp))+ "°C") #set motor temp
         screen.varNames[1].set(str(int(batt_temp)) + "°C") #set battery temp
+        screen.varNames[2].set(str(int(battpercent)) + "%") #set batt %
+        screen.varNames[3].set(str(int(power)) + "kW") #set power
+        screen.varNames[4].set("0:00:00") #set lap time
+        screen.varNames[5].set(str(40) + "kWH") #set lap power
         screen.varNames[6].set(str(int(speed))+" KM/H") #set speed label
         
-        if batt_temp < 35: #change label color for warning
+        if batt_temp < 30: #change label color for warning
             test = screen.telNames[1]
             test.configure(fg_color='#1B1464') #navy
-        elif batt_temp >= 35 and batt_temp < 60 : #between 35 and 59
+        elif batt_temp >= 30 and batt_temp < 40 : #between 30 and 39
             test = screen.telNames[1]
             test.configure(fg_color='#d47a13') #orange
         else: 
             test = screen.telNames[1]
+            test.configure(fg_color='Crimson') #red
+
+        if motortemp < 80: #change label color for warning
+            test = screen.telNames[0]
+            test.configure(fg_color='#1B1464') #navy
+        elif motortemp >= 80 and motortemp < 120 : #between 80 and 120
+            test = screen.telNames[0]
+            test.configure(fg_color='#d47a13') #orange
+        else: 
+            test = screen.telNames[0]
+            test.configure(fg_color='Crimson') #red
+
+        if battpercent > 50: #change label color for warning
+            test = screen.telNames[2]
+            test.configure(fg_color='#1B1464') #navy
+        elif battpercent >= 25 and battpercent < 50 : #between 50 and 25
+            test = screen.telNames[2]
+            test.configure(fg_color='#d47a13') #orange
+        else: 
+            test = screen.telNames[2]
             test.configure(fg_color='Crimson') #red
         
     #Code for testing screen
