@@ -52,7 +52,8 @@ DMA_HandleTypeDef hdma_spi1_tx;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
+/* Private variable */
+unint8_t TX_Buffer []= "A"; //DATA to sent
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -109,7 +110,8 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_SPI_Transmit(&hspi1, TX_Buffer, 1, 1000); //Sending in Blocking mode
+  HAL_Delay(100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
